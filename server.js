@@ -25,13 +25,13 @@ MongoClient.connect(url, function(err, db) {
         data.users = t;
     });
 
-    var wtch = new watchdog.Watchdog(oxymetre.collection("users"), 500, {"id": 1}, 1000, object => {
+    var wtch = new watchdog.Watchdog(oxymetre.collection("users"), 2000, {"id": 1}, 1000, 0, object => {
         console.log("Users : changed !");
     });
     wtch.start();
     watchdogs.push(wtch);
 
-    wtch = new watchdog.Watchdog(oxymetre.collection("oxymetre"), 500, {"date": -1}, 5000, object => {
+    wtch = new watchdog.Watchdog(oxymetre.collection("oxymetre"), 1000, {"date": -1}, 5000, 1000*1000,object => { // 1'000(s) * 1'000 = (ms)
         var temp = [];
         var ids = [];
         console.log("Oxymetre : changed !");
@@ -53,7 +53,7 @@ MongoClient.connect(url, function(err, db) {
     wtch.start();
     watchdogs.push(wtch);
 
-    wtch = new watchdog.Watchdog(oxymetre.collection("alerts"), 500, {"date": -1}, 10000, object => {
+    wtch = new watchdog.Watchdog(oxymetre.collection("alerts"), 1000, {"date": -1}, 10000, 1000*1000, object => { // 1'000(s) * 1'000 = (ms)
         var temp = [];
         var ids = [];
         console.log("Alerts : changed !");
@@ -108,6 +108,10 @@ function process(object) {
 app.get("/", (req, res) => {
     res.render("index.ejs", {"data": "salut"});
 });
+
+app.get("/patient", (req, res) => {
+    res.render("patient.ejs", { "url": req.url});
+})
 
 app.post("/", (req, res) => {
     res.end(JSON.stringify(process(data)));

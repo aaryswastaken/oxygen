@@ -91,7 +91,7 @@
     /////////////////////////////////////////
     var placeholder = document.getElementById("data");
 
-    var table = document.getElementById("tbody")
+    var table = document.getElementById("tbody");
 
     function print(data) {
         // placeholder.innerText = data;
@@ -124,6 +124,7 @@
                         color = colors.unknown;
                 }
                 _dom.style.backgroundColor = color
+                _dom.onclick= () => {window.location.href="/patient?"+e.id.toString();}
                 _dom.innerHTML = "<div class=\"nom\">"+e.name+"</div><div class=\"oxygen\">"+e.concentration+"</div><div class=\"chambre\">"+e.chambre+"</div>"
             }
         })
@@ -169,6 +170,7 @@
                     case 4:
                         color = colors.unknown;
                 }
+                th.onclick = () => {window.location.href="/patient?"+element.id.toString();}
                 th.style.backgroundColor = color
                 th.innerHTML = "<div class=\"nom\">"+element.name+"</div><div class=\"oxygen\">"+element.concentration+"</div><div class=\"chambre\">"+element.chambre+"</div>"
 
