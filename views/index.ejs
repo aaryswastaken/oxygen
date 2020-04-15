@@ -1,0 +1,200 @@
+<h1>Dashboard</h1>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+
+<div id="data">
+</div>
+
+<table>
+    <tbody id="tbody">
+        <!--
+        <tr>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+        </tr>--------->
+    </tbody>
+</table>
+
+<style>
+    th {
+        padding: 2px;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    .oxygen {
+        font-size: 200%;
+    }
+</style>
+
+<script>
+    //////////////////// DEFINE /////////////
+
+    var colors = {}
+
+    colors.normal = "rgba(55,210,67,0.56)"
+    colors.warning = "rgba(210,176,55,0.56)"
+    colors.problem = "rgba(210,55,55,0.56)"
+    colors.critical = "rgba(255,0,0,0.78)"
+    colors.unknown = "rgba(230,0,255,0.72)"
+
+    /////////////////////////////////////////
+    var placeholder = document.getElementById("data");
+
+    var table = document.getElementById("tbody")
+
+    function print(data) {
+        // placeholder.innerText = data;
+        console.log(data);
+
+        data = JSON.parse(data)
+
+        data.forEach(e => {
+            var _dom = document.getElementById(e.id.toString())
+            if(_dom === null) {
+                console.log("sth is missing")
+                table.innerHTML = ""; //cleanup
+                init(data);
+            } else {
+                var color = colors.normal;
+                switch(e.level) {
+                    case 0:
+                        color = colors.normal;
+                        break;
+                    case 1:
+                        color = colors.warning;
+                        break;
+                    case 2:
+                        color = colors.problem;
+                        break;
+                    case 3:
+                        color = colors.critical;
+                        break;
+                    case 4:
+                        color = colors.unknown;
+                }
+                _dom.style.backgroundColor = color
+                _dom.innerHTML = "<div class=\"nom\">"+e.name+"</div><div class=\"oxygen\">"+e.concentration+"</div><div class=\"chambre\">"+e.chambre+"</div>"
+            }
+        })
+    }
+
+    function init(data) {
+        var toPrint = [[]]
+        var x = 0;
+        var y = 0;
+
+        data.forEach(e => {
+            if(x<10) {
+                toPrint[y].push(e)
+            } else {
+                toPrint.push([e])
+                y += 1;
+                x = 0;
+            }
+            x += 1;
+        });
+
+        toPrint.forEach( elements => {
+            tr = document.createElement("tr");
+            tr.id = "tr#"+x;
+            elements.forEach( element => {
+                th = document.createElement("th");
+
+                th.id = element.id
+                var color = colors.normal;
+                switch(element.level) {
+                    case 0:
+                        color = colors.normal;
+                        break;
+                    case 1:
+                        color = colors.warning;
+                        break;
+                    case 2:
+                        color = colors.problem;
+                        break;
+                    case 3:
+                        color = colors.critical;
+                        break;
+                    case 4:
+                        color = colors.unknown;
+                }
+                th.style.backgroundColor = color
+                th.innerHTML = "<div class=\"nom\">"+element.name+"</div><div class=\"oxygen\">"+element.concentration+"</div><div class=\"chambre\">"+element.chambre+"</div>"
+
+                tr.appendChild(th);
+            })
+            x += 1;
+            table.appendChild(tr);
+        })
+    }
+
+    function refresh() {
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                print(this.responseText);
+                console.log("refreshed");
+            }
+        }
+        req.open("POST", "/", true);
+        req.send();
+    }
+
+    function loop() {
+        setTimeout(loop, 500);
+        refresh();
+    }
+
+    loop();
+</script>
