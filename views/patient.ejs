@@ -1,1 +1,336 @@
-The url : <%= url %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<% var maxBar = 900; %>
+
+<div>
+    <div class="header">
+        <div class="back"><i class="fa fa-arrow-left" style="font-size:36px;" onclick="window.history.back()"></i></div>
+        <div class="settings"><i class="fa fa-gear" style="font-size:36px;"></i></div>
+        <div class="name"><%= data.users[0].name %> - <%= data.users[0].chambre %></div>
+    </div>
+    <table class="main">
+        <tr>
+            <th class="title borderright">Alertes</th>
+            <th class="title">Graphique</th>
+        </tr>
+        <tr>
+            <th>
+                <!--<div style="width: 100%;text-align: center;font-size: 3em">Alertes</div>-->
+                <table class="borderright">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Gravité</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alerts-body">
+                    </tbody>
+                </table>
+            </th>
+            <th style="width:65%; height: 100%">
+                <!--Graph-->
+                <div style="width: 100%;height:100%"><canvas id="chart"></canvas></div>
+                <label for="size">Echelle</label><input type="range" id="size" min="0" max="<%=maxBar%>" value="0" style="direction: ltr">
+            </th>
+        </tr>
+        <tr>
+            <th colspan="2" class="title bordertop">Notes</th>
+        </tr>
+        <tr>
+            <th colspan="2">
+                <table id="message-body"> <!-- INNER CONTENT IN refresh_notes ()-->
+                </table>
+            </th>
+        </tr>
+    </table>
+</div>
+
+<style>
+    .header{
+        width: 100%;
+        border-bottom: rgba(0, 0, 0, 1) solid 1px;
+    }
+
+    .header > .name {
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 5px;
+        text-align: center;
+        font-size: 2.7em;
+    }
+
+    .header > .settings {
+        float: right;
+        position: relative;
+        top: 2px;
+        right: 5px;
+    }
+
+    .header > .back {
+        float: left;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    .title {
+        font-size: 3em;
+    }
+
+    .borderright {
+        border-right: rgba(0, 0, 0, 1) solid 1px;
+    }
+
+    .bordertop {
+        border-top: rgba(0, 0, 0, 1) solid 1px;
+    }
+
+    #size {
+        width: 100%;
+        -webkit-appearance: none;
+        background: #d3d3d3;
+        outline: none;
+        opacity: 0.7;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+    }
+
+    #size::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 25px;
+        height: 25px;
+        background: #4CAF50;
+        cursor: pointer;
+    }
+
+    #size::-moz-range-thumb {
+        width: 25px;
+        height: 25px;
+        background: #4CAF50;
+        cursor: pointer;
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<script>
+    //////////////////// DEFINE /////////////
+
+    var colors = {}
+
+    colors.normal = "rgba(55,210,67,0.56)"
+    colors.warning = "rgba(210,176,55,0.56)"
+    colors.problem = "rgba(210,55,55,0.56)"
+    colors.critical = "rgba(255,0,0,0.78)"
+    colors.unknown = "rgba(230,0,255,0.72)"
+
+    colors.background1 = "rgba(180,180,180,0.42)"
+    colors.background2 = "rgba(224,224,224,0.84)"
+
+    <%var nbase = 100;%>
+
+    /////////////////////////////////////////
+
+    //////////////////////////////////////////// ALERTS //////////////////////////////////////////////////////
+
+    function refresh_alerts (alerts) {
+        var alertsDOM = document.getElementById("alerts-body");
+        alertsDOM.innerHTML = "";
+
+        var _max = 0;
+
+        if (alerts.length > 15) {
+            _max = 15;
+        } else {
+            _max = alerts.length;
+        }
+
+        for (var i = 0; i < _max; i += 1) {
+            var e = alerts[i]
+            // console.log(e);
+            var tr = document.createElement("tr");
+
+            var date = new Date(e.date)
+            var th_date = document.createElement("th");
+            th_date.innerText = `${date.getDay()}/${date.getMonth()}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
+            var th_gravite = document.createElement("th");
+            var abort = false;
+            switch (e.level) {
+                case 0:
+                    // abort = true;
+                    th_gravite.innerText = "Normal"
+                    tr.style.backgroundColor = colors.normal;
+                    //console.log("Abort");
+                    break;
+                case 1:
+                    th_gravite.innerText = "Warning"
+                    tr.style.backgroundColor = colors.warning;
+                    break;
+                case 2:
+                    th_gravite.innerText = "Problem"
+                    tr.style.backgroundColor = colors.problem;
+                    break;
+                case 3:
+                    th_gravite.innerText = "Critical"
+                    tr.style.backgroundColor = colors.critical;
+                    break;
+                case 4:
+                    th_gravite.innerText = "Unknown"
+                    tr.style.backgroundColor = colors.unknown;
+                    break;
+            }
+
+            if (!abort) {
+                tr.appendChild(th_date);
+                tr.appendChild(th_gravite);
+                alertsDOM.appendChild(tr);
+            }
+        }
+
+        var toFill = 15 - _max;
+
+        if (toFill !== 0) {
+            for (i = 0; i < toFill; i += 1) {
+                tr = document.createElement("tr");
+
+                var th = document.createElement("th");
+                th.style.height = "20px";
+                tr.appendChild(th);
+
+                alertsDOM.appendChild(tr);
+            }
+        }
+    }
+
+    refresh_alerts(<%- JSON.stringify(data.alerts) %>); // EJS GENERATED
+
+    //////////////////////////////////////////// NOTES //////////////////////////////////////////////////////
+
+    function refresh_notes (messages) {
+        var messageDOM = document.getElementById("message-body")
+        messageDOM.innerHTML = "<tr>\n" +
+            "                        <th>Date</th>\n" +
+            "                        <th>Note</th>\n" +
+            "                        <th>Emmeteur</th>\n" +
+            "                    </tr>"
+
+        var background = false;
+
+        messages.forEach(m => {
+            tr = document.createElement("tr");
+
+            var date = new Date(m.date)
+            var th_date = document.createElement("th");
+            th_date.innerText = `${date.getDay()}/${date.getMonth()}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
+
+            var th_message = document.createElement("th");
+            th_message.innerText = m.note;
+
+            var th_from = document.createElement("th");
+            th_from.innerText = m.from;
+
+            tr.appendChild(th_date);
+            tr.appendChild(th_message);
+            tr.appendChild(th_from);
+
+            if (background) {
+                tr.style.backgroundColor = colors.background1;
+            } else {
+                tr.style.backgroundColor = colors.background2;
+            }
+
+            background = !background;
+
+            messageDOM.appendChild(tr)
+        })
+    }
+
+    refresh_notes(<%- JSON.stringify(data.notes) %>); // EJS GENERATED
+
+    //////////////////////////////////////////// GRAPH //////////////////////////////////////////////////////
+
+    var ctx = document.getElementById('chart').getContext('2d');
+
+    var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'SPO2 (%)',
+                data: [],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: false
+                    }
+                }]
+            },
+            animation: {
+                duration: 0
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+            responsiveAnimationDuration: 0,
+            aspectRatio: 1
+        }
+    });
+
+    document.getElementById("size").oninput = function () {
+        // console.log(this.value)
+        setGraphTime(this.value)
+    }
+
+    function setGraphTime (_var) {
+        var data = <%- JSON.stringify(data.oxymeter) %>;
+        var val = parseInt(_var);
+        // console.log("Asked : "+val)
+        // console.log("Before : " + data.length.toString());
+        var cctr = [];
+        var lbl = [];
+        data.splice(<%= nbase%>+val, data.length-val);
+        data.splice(0, val);
+        // console.log("After : " + data.length.toString());
+        data.forEach( e => {
+            cctr.push(e.concentration);
+            var date = new Date(e.date);
+            lbl.push(`${date.getDay()}/${date.getMonth()}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`)
+        });
+        chart.data.labels = lbl;
+        chart.data.datasets[0].data = cctr;
+        chart.update();
+    }
+
+    setGraphTime(0);
+
+    //////////////////////////////////////////// REFRESH ////////////////////////////////////////////////////
+
+    function refresh_all() {
+        setTimeout(refresh_all, <%= refresh_rate %>);
+
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                var json = JSON.parse(this.responseText)
+                refresh_alerts(json.alerts);
+                refresh_notes(json.notes);
+                //console.log(json);
+                console.info("refreshed");
+            }
+        }
+        req.open("POST", "/patient?"+<%= data.users[0].id%>, true);
+        req.send();
+    }
+
+    refresh_all();
+</script>

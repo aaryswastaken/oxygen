@@ -1,37 +1,53 @@
 const express = require("express");
 const app = express();
 
+const fs = require("fs");
+
+var settings = JSON.parse(fs.readFileSync("./settings.json"));
+var cred = JSON.parse(fs.readFileSync("./credentials.json"));
+
+console.log(JSON.stringify(cred));
+
+const url = require("url");
+
 const mongodb = require("mongodb");
 var MongoClient = mongodb.MongoClient;
 
 const watchdog = require("./watchdog");
 var watchdogs = [];
 
-var url = "mongodb://vsahler:vsahler@localhost:27017/";
+var dburl = `mongodb://${cred.db.connection.user}:${cred.db.connection.password}@${cred.db.connection.ip}:${cred.db.connection.port}/`;
+
+console.log(dburl)
 
 var data = {};
 
-MongoClient.connect(url, function(err, db) {
+var database;
+
+MongoClient.connect(dburl, function(err, db) {
     if (err) {
         console.log("Error : "+err);
     }
 
-    var oxymetre = db.db("oxymetre");
+    var oxymetre = db.db(cred.db.db.name);
+    database = oxymetre;
 
-    oxymetre.collection("users").find().toArray().then(t => {
+    console.log(cred.db.db.name);
+
+    oxymetre.collection(cred.db.db.ressources.users).find().toArray().then(t => {
         t.forEach(e => {
             console.log(e.id + " " + e.name);
         });
         data.users = t;
     });
 
-    var wtch = new watchdog.Watchdog(oxymetre.collection("users"), 2000, {"id": 1}, 1000, 0, object => {
+    var wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.users), settings["database.period"], {"id": 1}, settings["database.limit"], object => {
         console.log("Users : changed !");
     });
     wtch.start();
     watchdogs.push(wtch);
 
-    wtch = new watchdog.Watchdog(oxymetre.collection("oxymetre"), 1000, {"date": -1}, 5000, 1000*1000,object => { // 1'000(s) * 1'000 = (ms)
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.data), settings["database.period"], {"date": -1}, settings["database.limit"], object => {
         var temp = [];
         var ids = [];
         console.log("Oxymetre : changed !");
@@ -53,7 +69,7 @@ MongoClient.connect(url, function(err, db) {
     wtch.start();
     watchdogs.push(wtch);
 
-    wtch = new watchdog.Watchdog(oxymetre.collection("alerts"), 1000, {"date": -1}, 10000, 1000*1000, object => { // 1'000(s) * 1'000 = (ms)
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.alerts), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
         var temp = [];
         var ids = [];
         console.log("Alerts : changed !");
@@ -105,16 +121,70 @@ function process(object) {
     return response
 }
 
+function dumpDBfromURL(url, callback) {
+    var split = url.split("?");
+    var id = 1;
+    if(split.length === 2) {
+        id = parseInt(split[1]);
+    }
+    var toSend = {};
+    database.collection(cred.db.db.ressources.users).find({"id": id}).toArray().then( a => {
+        toSend.users = a;
+        database.collection(cred.db.db.ressources.data).find({"id": id}).sort({"date": -1}).toArray().then( a => {
+            toSend.oxymeter = a;
+            database.collection(cred.db.db.ressources.alerts).find({"id": id}).sort({"date": -1}).toArray().then( a => {
+                toSend.alerts = a;
+                database.collection(cred.db.db.ressources.notes).find({"id": id}).sort({"date": -1}).toArray().then( a => {
+                    toSend.notes = a;
+
+                    console.log(JSON.stringify(toSend));
+
+                    toSend.url = url;
+                    toSend.id = id;
+
+                    //res.end(JSON.stringify(toSend));
+                    callback(toSend);
+                });
+            });
+        });
+    });
+}
+
 app.get("/", (req, res) => {
     res.render("index.ejs", {"data": "salut"});
 });
 
-app.get("/patient", (req, res) => {
-    res.render("patient.ejs", { "url": req.url});
-})
-
 app.post("/", (req, res) => {
     res.end(JSON.stringify(process(data)));
+})
+
+app.get("/patient", (req, res) => {
+    dumpDBfromURL(req.url, (toSend) => {
+        res.render("patient.ejs", { "data": toSend, "url": req.url, "refresh_rate": settings["patient.refresh_rate"]});
+    })
+});
+
+app.post("/patient", (req, res) => {
+    dumpDBfromURL(req.url, (toSend) => {
+        res.end(JSON.stringify(toSend));
+    })
+})
+
+app.get("/settings", (req, res) => {
+    settings = fs.readFileSync("./settings.json");
+    res.end(settings);
+});
+
+app.post("/settings", (req, res) => {
+    settings = JSON.parse(fs.readFileSync("./settings.json"));
+    url.parse(req.url).query.split("&").forEach(e => {
+        var split = e.split("=");
+        if(split.length === 2) {
+            settings[split[0]] = split[1];
+        }
+    });
+    fs.writeFileSync("./settings.json", JSON.stringify(settings));
+    res.end(JSON.stringify(settings));
 })
 
 app.listen(80);

@@ -18,7 +18,7 @@ MongoClient.connect(url, function(err, db) {
 
     var oxymetre = db.db("oxymetre");
 
-    var wtch = new watchdog.Watchdog(oxymetre.collection("users"), 500, {"id": 1}, 1000, 0, object => {
+    var wtch = new watchdog.Watchdog(oxymetre.collection("users"), 500, {"id": 1}, 1000, object => {
         console.log("Sth changed !");
         data = object;
     });
