@@ -15,6 +15,7 @@ var MongoClient = mongodb.MongoClient;
 
 const watchdog = require("./watchdog");
 var watchdogs = [];
+var cleaners = [];
 
 var dburl = `mongodb://${cred.db.connection.user}:${cred.db.connection.password}@${cred.db.connection.ip}:${cred.db.connection.port}/`;
 
@@ -36,13 +37,13 @@ MongoClient.connect(dburl, function(err, db) {
 
     oxymetre.collection(cred.db.db.ressources.users).find().toArray().then(t => {
         t.forEach(e => {
-            console.log(e.id + " " + e.name);
+            //console.log(e.id + " " + e.name);
         });
         data.users = t;
     });
 
     var wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.users), settings["database.period"], {"id": 1}, settings["database.limit"], object => {
-        console.log("Users : changed !");
+        //console.log("Users : changed !");
     });
     wtch.start();
     watchdogs.push(wtch);
@@ -50,7 +51,7 @@ MongoClient.connect(dburl, function(err, db) {
     wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.data), settings["database.period"], {"date": -1}, settings["database.limit"], object => {
         var temp = [];
         var ids = [];
-        console.log("Oxymetre : changed !");
+        //console.log("Oxymetre : changed !");
         object.forEach(e => {
             if(ids.includes(e.id)) {
                 if(temp[e.id].date < e.date) {
@@ -69,10 +70,27 @@ MongoClient.connect(dburl, function(err, db) {
     wtch.start();
     watchdogs.push(wtch);
 
+    console.log(settings["database.cleaner.data.period"])
+
+
+
+    var cleaner = new watchdog.cleaner(
+        oxymetre.collection(cred.db.db.ressources.data),
+        settings["database.cleaner.data.period"],
+        {},
+        {"count": 15000},
+        (object) =>{
+            return object.length > 150000},
+        (err, obj) => {
+            console.log("[data] " + obj.result.n.toString() + " entry deleted")
+        }); // 1000 (s) * 1000 = (ms)
+    cleaner.start();
+    cleaners.push(cleaner);
+
     wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.alerts), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
         var temp = [];
         var ids = [];
-        console.log("Alerts : changed !");
+        //console.log("Alerts : changed !");
         object.forEach(e => {
             if(ids.includes(e.id)) {
                 if(temp[e.id].date < e.date) {
