@@ -1,0 +1,8 @@
+{
+  "display.colQty":"8",
+  "display.Test":"2",
+  "database.period": 2000,
+  "database.limit": 500,
+  "database.cleaner.data.period": 10000,
+  "patient.refresh_rate": 5000
+}

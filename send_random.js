@@ -39,7 +39,7 @@ var sendCrap = () => {
     });
     for(var i=0;i<rand(20);i++) {
         var choosen = data[rand(data.length)]
-        database.db("oxymetre").collection("alerts").insertOne({"id": choosen.id, "date": Date.now(), "level": rand(4)})
+        database.db("oxymetre").collection("alerts").insertOne({"id": choosen.id, "date": Date.now(), "level": rand(5)})
     }
     setTimeout(sendCrap, 1000);
 }

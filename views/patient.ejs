@@ -2,6 +2,27 @@
 
 <% var maxBar = 900; %>
 
+
+<div id="addNotePopup" hidden>
+    <div id="popup">
+        <div id="header">
+            Ajouter une note
+            <i class="fa fa-close" id="closePopup" style="float: left;position:relative;left:15px;"></i>
+        </div>
+        <div id="form">
+            <div id="from">
+                <label for="fromInput">De : </label><br/>
+                <input id="fromInput" type="text">
+            </div>
+            <div id="note">
+                <label for="noteInput">Texte : </label><br/>
+                <textarea id="noteInput"></textarea>
+            </div>
+        </div>
+        <button id="addNoteConfirm">Ajouter la note</button>
+    </div>
+</div>
+
 <div>
     <div class="header">
         <div class="back"><i class="fa fa-arrow-left" style="font-size:36px;" onclick="window.history.back()"></i></div>
@@ -34,7 +55,7 @@
             </th>
         </tr>
         <tr>
-            <th colspan="2" class="title bordertop">Notes</th>
+            <th colspan="2" class="title bordertop">Notes<i class="fa fa-plus" id="addNote" style="float: right;position: relative;right: 5px"></i></th>
         </tr>
         <tr>
             <th colspan="2">
@@ -111,6 +132,53 @@
         background: #4CAF50;
         cursor: pointer;
     }
+
+    #addNotePopup {
+        position: absolute;
+        width: 99%;
+        height: 98%;
+        background-color: rgba(0, 0, 0, 0.32);
+        z-index: 2;
+    }
+
+    #popup {
+        width: 50%;
+        height: 50%;
+        background-color: white;
+        position: relative;
+        top: 25%;
+        left: 25%;
+    }
+
+    #header {
+        text-align: center;
+        font-size: 2em;
+        position: relative;
+        top: 10px;
+    }
+
+    #form {
+        position: relative;
+        top: 40px;
+        left: 20px;
+    }
+
+    #from {
+        width: 100%;
+        margin-right: 20px;
+    }
+
+    #noteInput {
+        width: 80%;
+        height: 50%;
+    }
+
+    #addNoteConfirm {
+        float: right;
+        position: relative;
+        right: 5%;
+        top: 20%;
+    }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
@@ -125,12 +193,40 @@
     colors.critical = "rgba(255,0,0,0.78)"
     colors.unknown = "rgba(230,0,255,0.72)"
 
-    colors.background1 = "rgba(180,180,180,0.42)"
-    colors.background2 = "rgba(224,224,224,0.84)"
+    colors.background1 = "rgba(142,142,142,0.42)"
+    colors.background2 = "rgba(224,224,224,0.57)"
 
     <%var nbase = 100;%>
 
     /////////////////////////////////////////
+
+    document.getElementById("addNote").onclick = () => {
+        document.getElementById("addNotePopup").hidden = false;
+    }
+
+    document.getElementById("closePopup").onclick = () => {
+        document.getElementById("addNotePopup").hidden = true;
+    }
+
+    document.getElementById("addNoteConfirm").onclick = () => {
+        var from = document.getElementById("fromInput").value;
+        var note = document.getElementById("noteInput").value;
+
+        if(from.length === 0 || note.length === 0) {
+            alert("Vous n'avez pas remplis tout les champs");
+        } else {
+            var toSend = {"id": <%= data.users[0].id %>, "from": from, "note": note, "date": Date.now()}
+            console.log(toSend);
+
+            var req = new XMLHttpRequest();
+            req.onreadystatechange = function () {
+                document.getElementById("addNotePopup").hidden = true;
+                location.reload();
+            }
+            req.open("POST", "/addnote?"+JSON.stringify(toSend), true);
+            req.send();
+        }
+    }
 
     //////////////////////////////////////////// ALERTS //////////////////////////////////////////////////////
 
@@ -153,12 +249,13 @@
 
             var date = new Date(e.date)
             var th_date = document.createElement("th");
-            th_date.innerText = `${date.getDay()}/${date.getMonth()}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
+            th_date.innerText = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
             var th_gravite = document.createElement("th");
             var abort = false;
             switch (e.level) {
                 case 0:
-                    // abort = true;
+                    abort = <%= settings["showGreen"] %>;
+                        <% console.log(settings) %>
                     th_gravite.innerText = "Normal"
                     tr.style.backgroundColor = colors.normal;
                     //console.log("Abort");
@@ -222,10 +319,11 @@
 
             var date = new Date(m.date)
             var th_date = document.createElement("th");
-            th_date.innerText = `${date.getDay()}/${date.getMonth()}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
+            th_date.innerText = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
 
             var th_message = document.createElement("th");
             th_message.innerText = m.note;
+            th_message.style.width = "70%";
 
             var th_from = document.createElement("th");
             th_from.innerText = m.from;
@@ -291,20 +389,25 @@
         setGraphTime(this.value)
     }
 
+    var rawdata = <%- JSON.stringify(data.oxymeter) %>;
+    var lastgraphID = 0;
+
     function setGraphTime (_var) {
-        var data = <%- JSON.stringify(data.oxymeter) %>;
         var val = parseInt(_var);
+        lastgraphID = val;
         // console.log("Asked : "+val)
-        // console.log("Before : " + data.length.toString());
+        //console.log("Before : " + rawdata.length.toString());
         var cctr = [];
         var lbl = [];
+        data = JSON.parse(JSON.stringify(rawdata));
+        // console.log(data.length.toString());
         data.splice(<%= nbase%>+val, data.length-val);
         data.splice(0, val);
-        // console.log("After : " + data.length.toString());
+        //console.log("After : " + rawdata.length.toString());
         data.forEach( e => {
             cctr.push(e.concentration);
             var date = new Date(e.date);
-            lbl.push(`${date.getDay()}/${date.getMonth()}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`)
+            lbl.push(`${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`)
         });
         chart.data.labels = lbl;
         chart.data.datasets[0].data = cctr;
@@ -312,6 +415,13 @@
     }
 
     setGraphTime(0);
+
+    function refresh_graph(val) {
+        if(lastgraphID === 0) {
+            setGraphTime(lastgraphID);
+            rawdata = val;
+        }
+    }
 
     //////////////////////////////////////////// REFRESH ////////////////////////////////////////////////////
 
@@ -324,8 +434,9 @@
                 var json = JSON.parse(this.responseText)
                 refresh_alerts(json.alerts);
                 refresh_notes(json.notes);
+                refresh_graph(json.oxymeter);
                 //console.log(json);
-                console.info("refreshed");
+                // console.info("refreshed");
             }
         }
         req.open("POST", "/patient?"+<%= data.users[0].id%>, true);
