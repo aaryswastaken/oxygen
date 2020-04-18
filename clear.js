@@ -24,7 +24,19 @@ MongoClient.connect(url, function(err, db) {
         db.close();
     });
 
-    oxymetre.collection("alerts").deleteMany({}, function (err, obj) {
+    oxymetre.collection("oxymetre-alerts").deleteMany({}, function (err, obj) {
+        if (err) throw err;
+        console.log(obj.result.n + " document(s) deleted");
+        db.close();
+    });
+
+    oxymetre.collection("pulse").deleteMany({}, function (err, obj) {
+        if (err) throw err;
+        console.log(obj.result.n + " document(s) deleted");
+        db.close();
+    });
+
+    oxymetre.collection("pulse-alerts").deleteMany({}, function (err, obj) {
         if (err) throw err;
         console.log(obj.result.n + " document(s) deleted");
         db.close();

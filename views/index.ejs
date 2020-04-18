@@ -1,8 +1,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
-<% console.log(settings) %>
-
 <div class="settings"><i id="showSettings" class="fa fa-gear" style="font-size:36px;"></i>
     <div id="popup" hidden>
         <div>
@@ -14,7 +12,15 @@
 </div>
 
 <div style="border-bottom: black solid 1px">
-    <h1 style="width: 100%;text-align: center">Dashboard</h1>
+    <div style="float: left">
+        <label for="print">Valeures</label>
+        <div id="print">
+            <button id="printSPO2">SpO2</button>
+            <button id="printBPM"> BPM </button>
+            <button id="changePage"> Tourner </button>
+        </div>
+    </div>
+    <h1 style="width: 100%;text-align: center" id="title">Dashboard - SpO2</h1>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
@@ -234,6 +240,12 @@
 
     var table = document.getElementById("tbody");
 
+    var printing = 0;
+    /*
+     * 0 : SpO2
+     * 1 : BPM
+     */
+
     function print(data) {
         // placeholder.innerText = data;
         // console.log(data);
@@ -247,28 +259,94 @@
                 table.innerHTML = ""; //cleanup
                 init(data);
             } else {
-                var color = colors.normal;
-                switch(e.level) {
+                _dom.onclick= () => {window.location.href="/patient?"+e.id.toString();}
+                switch (printing) {
                     case 0:
-                        color = colors.normal;
+                        var color = colors.normal;
+                        switch(e.OXYlevel) {
+                            case 0:
+                                color = colors.normal;
+                                break;
+                            case 1:
+                                color = colors.warning;
+                                break;
+                            case 2:
+                                color = colors.problem;
+                                break;
+                            case 3:
+                                color = colors.critical;
+                                break;
+                            case 4:
+                                color = colors.unknown;
+                        }
+                        _dom.style.backgroundColor = color;
+                        _dom.innerHTML = "<div class=\"nom\">"+e.name+"</div><div class=\"oxygen\">"+e.concentration+"</div><div class=\"chambre\">"+e.chambre+"</div>"
                         break;
                     case 1:
-                        color = colors.warning;
+                        var color = colors.normal;
+                        switch(e.PULSElevel) {
+                            case 0:
+                                color = colors.normal;
+                                break;
+                            case 1:
+                                color = colors.warning;
+                                break;
+                            case 2:
+                                color = colors.problem;
+                                break;
+                            case 3:
+                                color = colors.critical;
+                                break;
+                            case 4:
+                                color = colors.unknown;
+                        }
+                        _dom.style.backgroundColor = color;
+                        _dom.innerHTML = "<div class=\"nom\">"+e.name+"</div><div class=\"oxygen\">"+e.pulsation+"</div><div class=\"chambre\">"+e.chambre+"</div>"
                         break;
-                    case 2:
-                        color = colors.problem;
-                        break;
-                    case 3:
-                        color = colors.critical;
-                        break;
-                    case 4:
-                        color = colors.unknown;
                 }
-                _dom.style.backgroundColor = color
-                _dom.onclick= () => {window.location.href="/patient?"+e.id.toString();}
-                _dom.innerHTML = "<div class=\"nom\">"+e.name+"</div><div class=\"oxygen\">"+e.concentration+"</div><div class=\"chambre\">"+e.chambre+"</div>"
             }
         })
+    }
+
+    document.getElementById("printSPO2").onclick = () => {
+        turn_stop = true;
+        printing = 0;
+        table.innerHTML = ""; //cleanup
+        document.getElementById("title").innerText = "Dashboard - Sp02"
+        refresh();
+    }
+
+    document.getElementById("printBPM").onclick = () => {
+        turn_stop = true;
+        printing = 1;
+        table.innerHTML = ""; //cleanup
+        document.getElementById("title").innerText = "Dashboard - BPM"
+        refresh();
+    }
+
+    var state = false;
+
+    function turn() {
+        if(state) {
+            printing = 0;
+            table.innerHTML = ""; //cleanup
+            document.getElementById("title").innerText = "Dashboard - Sp02"
+            refresh();
+        } else {
+            printing = 1;
+            table.innerHTML = ""; //cleanup
+            document.getElementById("title").innerText = "Dashboard - BPM"
+            refresh();
+        }
+        state = !state;
+        if(!turn_stop) {
+            setTimeout(turn, <%= settings["turnPeriod"]%>);
+        }
+    }
+
+    document.getElementById("changePage").onclick = () => {
+        turn_stop = false;
+        turn();
     }
 
     function init(data) {

@@ -40,6 +40,7 @@
                 <table class="borderright">
                     <thead>
                         <tr>
+                            <th>Catégorie</th>
                             <th>Date</th>
                             <th>Gravité</th>
                         </tr>
@@ -230,62 +231,148 @@
 
     //////////////////////////////////////////// ALERTS //////////////////////////////////////////////////////
 
-    function refresh_alerts (alerts) {
-        var alertsDOM = document.getElementById("alerts-body");
-        alertsDOM.innerHTML = "";
+    function refresh_OXYalerts (OXYalerts, PULSEalerts) {
+         ////////////// OXYMETER /////////////
+        var _max = 10;
 
-        var _max = 0;
-
-        if (alerts.length > 15) {
-            _max = 15;
+        if (OXYalerts === null || OXYalerts === [] || typeof OXYalerts == "undefined") {
+            console.log("pass");
         } else {
-            _max = alerts.length;
-        }
+            var alertsDOM = document.getElementById("alerts-body");
+            alertsDOM.innerHTML = "";
 
-        for (var i = 0; i < _max; i += 1) {
-            var e = alerts[i]
-            // console.log(e);
-            var tr = document.createElement("tr");
-
-            var date = new Date(e.date)
-            var th_date = document.createElement("th");
-            th_date.innerText = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
-            var th_gravite = document.createElement("th");
-            var abort = false;
-            switch (e.level) {
-                case 0:
-                    abort = <%= settings["showGreen"] %>;
-                        <% console.log(settings) %>
-                    th_gravite.innerText = "Normal"
-                    tr.style.backgroundColor = colors.normal;
-                    //console.log("Abort");
-                    break;
-                case 1:
-                    th_gravite.innerText = "Warning"
-                    tr.style.backgroundColor = colors.warning;
-                    break;
-                case 2:
-                    th_gravite.innerText = "Problem"
-                    tr.style.backgroundColor = colors.problem;
-                    break;
-                case 3:
-                    th_gravite.innerText = "Critical"
-                    tr.style.backgroundColor = colors.critical;
-                    break;
-                case 4:
-                    th_gravite.innerText = "Unknown"
-                    tr.style.backgroundColor = colors.unknown;
-                    break;
+            if (OXYalerts.length > 10) {
+                _max = 10;
+            } else {
+                _max = OXYalerts.length;
             }
 
-            if (!abort) {
-                tr.appendChild(th_date);
-                tr.appendChild(th_gravite);
+            for (var i = 0; i < _max; i += 1) {
+                var e = OXYalerts[i]
+                // console.log(e);
+                var tr = document.createElement("tr");
+
+                var th_type = document.createElement("th");
+                th_type.innerText = "Sp02"
+
+                var date = new Date(e.date);
+                var th_date = document.createElement("th");
+                th_date.innerText = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
+                var th_gravite = document.createElement("th");
+                var abort = false;
+                switch (e.level) {
+                    case 0:
+                        abort = <%= settings["showGreen"] %>;
+                    <% console.log(settings) %>
+                        th_gravite.innerText = "Normal"
+                        tr.style.backgroundColor = colors.normal;
+                        //console.log("Abort");
+                        break;
+                    case 1:
+                        th_gravite.innerText = "Warning"
+                        tr.style.backgroundColor = colors.warning;
+                        break;
+                    case 2:
+                        th_gravite.innerText = "Problem"
+                        tr.style.backgroundColor = colors.problem;
+                        break;
+                    case 3:
+                        th_gravite.innerText = "Critical"
+                        tr.style.backgroundColor = colors.critical;
+                        break;
+                    case 4:
+                        th_gravite.innerText = "Unknown"
+                        tr.style.backgroundColor = colors.unknown;
+                        break;
+                }
+
+                if (!abort) {
+                    tr.appendChild(th_type);
+                    tr.appendChild(th_date);
+                    tr.appendChild(th_gravite);
+                    alertsDOM.appendChild(tr);
+                }
+            }
+        }
+
+        var toFill = 10 - _max;
+
+        if (toFill !== 0) {
+            for (i = 0; i < toFill; i += 1) {
+                tr = document.createElement("tr");
+
+                var th = document.createElement("th");
+                th.style.height = "20px";
+                tr.appendChild(th);
+
                 alertsDOM.appendChild(tr);
             }
         }
 
-        var toFill = 15 - _max;
+        ////////////// PULSE /////////////
+
+        _max = 5;
+
+        if (PULSEalerts === null || PULSEalerts === [] || typeof PULSEalerts == "undefined") {
+            console.log("pass");
+        } else {
+            var alertsDOM = document.getElementById("alerts-body");
+
+            if (PULSEalerts.length > 5) {
+                _max = 5;
+            } else {
+                _max = PULSEalerts.length;
+            }
+
+            for (var i = 0; i < _max; i += 1) {
+                var e = PULSEalerts[i]
+                // console.log(e);
+                var tr = document.createElement("tr");
+
+                var th_type = document.createElement("th");
+                th_type.innerText = "BPM"
+
+                var date = new Date(e.date);
+                var th_date = document.createElement("th");
+                th_date.innerText = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`;
+                var th_gravite = document.createElement("th");
+                var abort = false;
+                switch (e.level) {
+                    case 0:
+                        abort = <%= settings["showGreen"] %>;
+                    <% console.log(settings) %>
+                        th_gravite.innerText = "Normal"
+                        tr.style.backgroundColor = colors.normal;
+                        //console.log("Abort");
+                        break;
+                    case 1:
+                        th_gravite.innerText = "Warning"
+                        tr.style.backgroundColor = colors.warning;
+                        break;
+                    case 2:
+                        th_gravite.innerText = "Problem"
+                        tr.style.backgroundColor = colors.problem;
+                        break;
+                    case 3:
+                        th_gravite.innerText = "Critical"
+                        tr.style.backgroundColor = colors.critical;
+                        break;
+                    case 4:
+                        th_gravite.innerText = "Unknown"
+                        tr.style.backgroundColor = colors.unknown;
+                        break;
+                }
+
+                if (!abort) {
+                    tr.appendChild(th_type);
+                    tr.appendChild(th_date);
+                    tr.appendChild(th_gravite);
+                    alertsDOM.appendChild(tr);
+                }
+            }
+        }
+
+        toFill = 5 - _max;
 
         if (toFill !== 0) {
             for (i = 0; i < toFill; i += 1) {
@@ -300,7 +387,7 @@
         }
     }
 
-    refresh_alerts(<%- JSON.stringify(data.alerts) %>); // EJS GENERATED
+    refresh_OXYalerts(<%- JSON.stringify(data.alerts) %>); // EJS GENERATED
 
     //////////////////////////////////////////// NOTES //////////////////////////////////////////////////////
 
@@ -355,24 +442,48 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'SPO2 (%)',
-                data: [],
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                ],
-                borderWidth: 1
-            }]
+                    label: 'SPO2 (%)',
+                    yAxisID: "SpO2",
+                    data: [],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                    ],
+                    borderWidth: 1
+                },
+                {
+                    label: "BPM",
+                    yAxisID: "BPM",
+                    data: [],
+                    backgroundColor: [
+                        'rgba(131,195,224,0.51)'
+                    ],
+                    borderColor: [
+                        'rgba(131,195,224,0.94)'
+                    ],
+                    borderWidth: 1
+                }]
         },
         options: {
             scales: {
                 yAxes: [{
-                    ticks: {
-                        beginAtZero: false
-                    }
-                }]
+                        id: "SpO2",
+                        ticks: {
+                            beginAtZero: false
+                        },
+                        type: 'linear',
+                        position: "left"
+                    },
+                    {
+                        id: "BPM",
+                        ticks: {
+                            beginAtZero: false
+                        },
+                        type: 'linear',
+                        position: 'right'
+                    }]
             },
             animation: {
                 duration: 0
@@ -389,7 +500,9 @@
         setGraphTime(this.value)
     }
 
-    var rawdata = <%- JSON.stringify(data.oxymeter) %>;
+    var rawdata = {};
+    rawdata.oxymeter = <%- JSON.stringify(data.oxymeter) %>;
+    rawdata.pulse = <%- JSON.stringify(data.pulse) %>;
     var lastgraphID = 0;
 
     function setGraphTime (_var) {
@@ -398,28 +511,41 @@
         // console.log("Asked : "+val)
         //console.log("Before : " + rawdata.length.toString());
         var cctr = [];
+        var pulse = [];
         var lbl = [];
-        data = JSON.parse(JSON.stringify(rawdata));
+
+        var data = {};
+
+        data.oxymeter = JSON.parse(JSON.stringify(rawdata.oxymeter));
+        data.pulse = JSON.parse(JSON.stringify(rawdata.pulse));
+
         // console.log(data.length.toString());
-        data.splice(<%= nbase%>+val, data.length-val);
-        data.splice(0, val);
+        data.oxymeter.splice(<%= nbase%>+val, data.length-val);
+        data.oxymeter.splice(0, val);
+        data.pulse.splice(<%= nbase%>+val, data.length-val);
+        data.pulse.splice(0, val);
         //console.log("After : " + rawdata.length.toString());
-        data.forEach( e => {
+        data.oxymeter.forEach( e => {
             cctr.push(e.concentration);
             var date = new Date(e.date);
             lbl.push(`${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()} @ ${date.getHours()}:${date.getMinutes()}`)
         });
+        data.pulse.forEach( e => {
+            pulse.push(e.pulsation);
+        })
         chart.data.labels = lbl;
         chart.data.datasets[0].data = cctr;
+        chart.data.datasets[1].data = pulse;
         chart.update();
     }
 
     setGraphTime(0);
 
-    function refresh_graph(val) {
+    function refresh_graph(oxymeter, pulse) {
         if(lastgraphID === 0) {
             setGraphTime(lastgraphID);
-            rawdata = val;
+            rawdata.oxymeter = oxymeter;
+            rawdata.pulse = pulse;
         }
     }
 
@@ -432,9 +558,10 @@
         req.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
                 var json = JSON.parse(this.responseText)
-                refresh_alerts(json.alerts);
+                // console.log(json.OXYalerts);
+                refresh_OXYalerts(json.OXYalerts, json.PULSEalerts);
                 refresh_notes(json.notes);
-                refresh_graph(json.oxymeter);
+                refresh_graph(json.oxymeter, json.pulse);
                 //console.log(json);
                 // console.info("refreshed");
             }

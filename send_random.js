@@ -36,10 +36,13 @@ var sendCrap = () => {
     console.log("Sending ...");
     data.forEach(e => {
         database.db("oxymetre").collection("oxymetre").insertOne({"id": e.id, "concentration": (Math.floor(Math.random() * Math.floor(5))+95), "date": Date.now()});
+        database.db("oxymetre").collection("pulse").insertOne({"id": e.id, "pulsation": (Math.floor(Math.random() * Math.floor(100))+100), "date": Date.now()});
     });
     for(var i=0;i<rand(20);i++) {
         var choosen = data[rand(data.length)]
-        database.db("oxymetre").collection("alerts").insertOne({"id": choosen.id, "date": Date.now(), "level": rand(5)})
+        database.db("oxymetre").collection("oxymetre-alerts").insertOne({"id": choosen.id, "date": Date.now(), "level": rand(5)})
+        choosen = data[rand(data.length)]
+        database.db("oxymetre").collection("pulse-alerts").insertOne({"id": choosen.id, "date": Date.now(), "level": rand(5)})
     }
     setTimeout(sendCrap, 1000);
 }

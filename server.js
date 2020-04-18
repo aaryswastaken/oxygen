@@ -87,10 +87,10 @@ MongoClient.connect(dburl, function(err, db) {
     cleaner.start();
     cleaners.push(cleaner);
 
-    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.alerts), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.OXYalerts), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
         var temp = [];
         var ids = [];
-        //console.log("Alerts : changed !");
+        //console.log("OXYalerts : changed !");
         object.forEach(e => {
             if(ids.includes(e.id)) {
                 if(temp[e.id].date < e.date) {
@@ -104,7 +104,64 @@ MongoClient.connect(dburl, function(err, db) {
 
         // console.log(temp);
 
-        data.alerts = temp;
+        data.OXYalerts = temp;
+    });
+    wtch.start();
+    watchdogs.push(wtch);
+
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.pulse), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
+        var temp = [];
+        var ids = [];
+        //console.log("OXYalerts : changed !");
+        object.forEach(e => {
+            if(ids.includes(e.id)) {
+                if(temp[e.id].date < e.date) {
+                    temp[e.id] = e;
+                }
+            } else {
+                ids.push(e.id);
+                temp[e.id] = e;
+            }
+        });
+
+        // console.log(temp);
+
+        data.pulse = temp;
+    });
+    wtch.start();
+    watchdogs.push(wtch);
+
+    var cleaner = new watchdog.cleaner(
+        oxymetre.collection(cred.db.db.ressources.pulse),
+        settings["database.cleaner.data.period"],
+        {},
+        {"count": 15000},
+        (object) =>{
+            return object.length > 150000},
+        (err, obj) => {
+            console.log("[data] " + obj.result.n.toString() + " entry deleted")
+        }); // 1000 (s) * 1000 = (ms)
+    cleaner.start();
+    cleaners.push(cleaner);
+
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.PULSEalerts), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
+        var temp = [];
+        var ids = [];
+        //console.log("OXYalerts : changed !");
+        object.forEach(e => {
+            if(ids.includes(e.id)) {
+                if(temp[e.id].date < e.date) {
+                    temp[e.id] = e;
+                }
+            } else {
+                ids.push(e.id);
+                temp[e.id] = e;
+            }
+        });
+
+        // console.log(temp);
+
+        data.PULSEalerts = temp;
     });
     wtch.start();
     watchdogs.push(wtch);
@@ -126,9 +183,21 @@ function process(object) {
                 }
             });
 
-            object.alerts.forEach(alert => {
+            object.OXYalerts.forEach(alert => {
                 if(alert.id === obj.id) {
-                    obj.level = alert.level;
+                    obj.OXYlevel = alert.level;
+                }
+            })
+
+            object.pulse.forEach(pulse => {
+                if(pulse.id === obj.id) {
+                    obj.pulsation = pulse.pulsation;
+                }
+            })
+
+            object.PULSEalerts.forEach(pulse => {
+                if(pulse.id === obj.id) {
+                    obj.PULSElevel = pulse.level;
                 }
             })
 
@@ -150,18 +219,24 @@ function dumpDBfromURL(url, callback) {
         toSend.users = a;
         database.collection(cred.db.db.ressources.data).find({"id": id}).sort({"date": -1}).toArray().then( a => {
             toSend.oxymeter = a;
-            database.collection(cred.db.db.ressources.alerts).find({"id": id}).sort({"date": -1}).toArray().then( a => {
-                toSend.alerts = a;
-                database.collection(cred.db.db.ressources.notes).find({"id": id}).sort({"date": -1}).toArray().then( a => {
-                    toSend.notes = a;
+            database.collection(cred.db.db.ressources.pulse).find({"id": id}).sort({"date": -1}).toArray().then( a => {
+                toSend.pulse = a;
+                database.collection(cred.db.db.ressources.OXYalerts).find({"id": id}).sort({"date": -1}).toArray().then(a => {
+                    toSend.OXYalerts = a;
+                    database.collection(cred.db.db.ressources.PULSEalerts).find({"id": id}).sort({"date": -1}).toArray().then(a => {
+                        toSend.PULSEalerts = a;
+                        database.collection(cred.db.db.ressources.notes).find({"id": id}).sort({"date": -1}).toArray().then(a => {
+                            toSend.notes = a;
 
-                    // console.log(JSON.stringify(toSend));
+                            // console.log(JSON.stringify(toSend));
 
-                    toSend.url = url;
-                    toSend.id = id;
+                            toSend.url = url;
+                            toSend.id = id;
 
-                    //res.end(JSON.stringify(toSend));
-                    callback(toSend);
+                            //res.end(JSON.stringify(toSend));
+                            callback(toSend);
+                        });
+                    });
                 });
             });
         });
