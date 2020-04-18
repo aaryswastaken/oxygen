@@ -1,13 +1,38 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 
 <div class="settings"><i id="showSettings" class="fa fa-gear" style="font-size:36px;"></i>
     <div id="popup" hidden>
         <div>
             <label for="ncol">Patient par lignes</label><input id="ncol" class="settingsInput" type="text" name="display.colQty" value="<%= settings["display.colQty"] %>"> <br/>
             <label for="displayNoWarnings">Afficher les etats normal (fenetre patient)</label><input id="displayNoWarnings" class="settingsInput" type="checkbox" name="showGreen" value="on" onclick="checkboxDisplayNoWarnings(this)">
+            <br/><button id="modifyAlertProfiles">Modifier les profils d'alerte</button>
             <button id="send">Appliquer</button>
         </div>
+    </div>
+</div>
+
+<div id="modifyAlertProfilesPopup" hidden>
+    <div id="mapopup">
+        <div id="maheader">
+            Modifier les profils d'alerte
+            <i class="fa fa-close" id="maclosePopup" style="float: left;position:relative;left:15px;"></i>
+        </div>
+        <div id="maform">
+            <input type="radio" name="context" value="oxy" id="oxyRadio"><label for="oxyRadio">Alertes d'oxymetrie</label><br/>
+            <input type="radio" name="context" value="pulse" id="pulseRadio"><label for="pulseRadio">Alertes de pulsation Cardiaques</label><br/>
+            <label for="profilSelect">Profil : </label><select id="profilSelect"></select><button id="addProfile">Ajouter un profil</button>
+            <div id="profilSettings">
+                <div id="profilId">Id : </div>
+                <label for="profilName">Nom de profil : </label><input type="text" id="profilName"><br/>
+                <label for="profilThreshold">Seuil : </label><input type="number" id="profilThreshold"><br/>
+                <label for="profilWarn">Warning (secondes) : </label><input type="number" id="profilWarn"><br/>
+                <label for="profilProblem">Problem (secondes) : </label><input type="number" id="profilProblem"><br/>
+                <label for="profilCritical">Critical (secondes) : </label><input type="number" id="profilCritical"><br/>
+            </div>
+        </div>
+        <button id="modifyConfirm">Modifier les profils</button>
     </div>
 </div>
 
@@ -22,8 +47,6 @@
     </div>
     <h1 style="width: 100%;text-align: center" id="title">Dashboard - SpO2</h1>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 
 <div id="data">
 </div>
@@ -123,6 +146,44 @@
 
     #send {
         margin-top: 30px;
+    }
+
+    /*******************************************/
+    #modifyAlertProfilesPopup {
+        position: absolute;
+        width: 99%;
+        height: 98%;
+        background-color: rgba(0, 0, 0, 0.32);
+        z-index: 2;
+    }
+
+    #mapopup {
+        width: 50%;
+        height: 50%;
+        background-color: white;
+        position: relative;
+        top: 25%;
+        left: 25%;
+    }
+
+    #maheader {
+        text-align: center;
+        font-size: 2em;
+        position: relative;
+        top: 10px;
+    }
+
+    #maform {
+        position: relative;
+        top: 40px;
+        left: 20px;
+    }
+
+    #modifyConfirm {
+        float: right;
+        position: relative;
+        right: 5%;
+        top: 20%;
     }
 </style>
 
@@ -233,6 +294,173 @@
         }
 
         location.reload();
+    }
+
+    //////////////////////////////// MODIFIY ALERT PROFILES ///////////////////////////////
+
+    document.getElementById("modifyAlertProfiles").onclick = () => {
+        console.log("modifyAlertProfiles ");
+        document.getElementById("modifyAlertProfilesPopup").hidden = false
+    }
+
+    document.getElementById("maclosePopup").onclick = () => {
+        document.getElementById("modifyAlertProfilesPopup").hidden = true;
+    }
+
+    document.getElementById("modifyConfirm").onclick = () => {
+        console.log("Modify");
+    }
+
+    var isSelectedAlert = -1;
+    var id = -1;
+
+    document.getElementById("oxyRadio").onchange = () => { // is selected
+        isSelectedAlert = 0;
+
+        var _dom = document.getElementById("profilSelect");
+        _dom.innerHTML = "";
+
+        json.alertProfiles.oxy.forEach( e => {
+            var option = document.createElement("option");
+            option.innerText = `#${e.id}: ${e.name}`;
+            option.value = e.id.toString();
+
+            _dom.appendChild(option)
+        })
+
+        document.getElementById("profilSelect").onchange();
+    }
+
+    document.getElementById("pulseRadio").onchange = () => {
+        var _dom = document.getElementById("profilSelect");
+        _dom.innerHTML = "";
+
+        isSelectedAlert = 1;
+
+        json.alertProfiles.pulse.forEach( e => {
+            var option = document.createElement("option");
+            option.innerText = `#${e.id}: ${e.name}`;
+            option.value = e.id.toString();
+
+            _dom.appendChild(option)
+        });
+
+        document.getElementById("profilSelect").onchange();
+    }
+
+    document.getElementById("profilSelect").onchange = () => {
+        console.log(json.alertProfiles);
+
+        id = document.getElementById("profilSelect").value;
+
+        var source;
+        switch(isSelectedAlert) {
+            case 0:
+                source = json.alertProfiles.oxy;
+                break;
+            case 1:
+                source = json.alertProfiles.pulse;
+        }
+
+        var _data = source[id-1];
+
+        console.log(_data);
+
+        document.getElementById("profilId").innerText = "ID : " + _data.id.toString();
+        document.getElementById("profilName").value = _data.name;
+        document.getElementById("profilThreshold").value = _data.config.thre;
+        document.getElementById("profilWarn").value = _data.config.warn;
+        document.getElementById("profilProblem").value = _data.config.prob;
+        document.getElementById("profilCritical").value = _data.config.crit;
+    }
+
+    document.getElementById("modifyConfirm").onclick = () => {
+        var name = document.getElementById("profilName").value;
+        var thre = document.getElementById("profilThreshold").value;
+        var warn = document.getElementById("profilWarn").value;
+        var prob = document.getElementById("profilProblem").value;
+        var crit = document.getElementById("profilCritical").value;
+
+        if(parseInt(document.getElementById("profilSelect").value) !== -1) {
+            if (length(name) === 0 || length(thre) === 0 || length(warn) === 0 || length(prob) === 0 || length(crit) === 0) {
+                alert("Veuillez vérifier vos données");
+            } else {
+                console.log("Ok");
+                var post = `/alertConfig?filter=${JSON.stringify({
+                    "category": isSelectedAlert + 1,
+                    "id": id
+                })}&data=${JSON.stringify({
+                    "name": name,
+                    "config": {"thre": thre, "warn": warn, "prob": prob, "crit": crit}
+                })}`;
+                console.log(post);
+
+                var req = new XMLHttpRequest();
+                req.onreadystatechange = function () {
+                    location.reload();
+                }
+                req.open("POST", post, true);
+                req.send();
+            }
+        } else {
+            if (length(name) === -1 || length(thre) === -1 || length(warn) === -1 || length(prob) === -1 || length(crit) === -1) {
+                alert("Veuillez vérifier vos données");
+            } else {
+                console.log(id);
+                var post = `/createConfig?filter=${JSON.stringify({
+                    "category": isSelectedAlert + 1,
+                    "id": parseInt(id)+1
+                })}&data=${JSON.stringify({
+                    "name": name,
+                    "config": {"thre": thre, "warn": warn, "prob": prob, "crit": crit}
+                })}`;
+                console.log(post);
+
+                var req = new XMLHttpRequest();
+                req.onreadystatechange = function () {
+                    location.reload();
+                }
+                req.open("POST", post, true);
+                req.send();
+            }
+        }
+    }
+
+    function length(val) {
+        return val.toString().length;
+    }
+
+    function setup() {
+        document.getElementById("oxyRadio").checked = true;
+        document.getElementById("oxyRadio").onchange();
+    }
+
+    document.getElementById("addProfile").onclick = () => {
+        var _max = 0;
+        switch(isSelectedAlert) {
+            case 0: // oxy
+                _max = json.alertProfiles.oxy.length;
+                break;
+            case 1:
+                _max = json.alertProfiles.pulse.length;
+                break
+        }
+
+        var _dom = document.getElementById("profilSelect");
+
+        var option = document.createElement("option");
+        option.innerText = `#${_max+1}: NOUVELLE CONFIGURATION`;
+        option.value = "-1";
+        option.selected = true;
+
+        _dom.appendChild(option);
+
+        document.getElementById("profilId").innerText = "ID : "+(_max+1).toString()
+        document.getElementById("profilName").value = -1;
+        document.getElementById("profilThreshold").value = -1;
+        document.getElementById("profilWarn").value = -1;
+        document.getElementById("profilProblem").value = -1;
+        document.getElementById("profilCritical").value = -1;
     }
 
     /////////////////////////////////////////
@@ -400,12 +628,21 @@
         })
     }
 
+    var ft = 0;
+
+    var json = {};
+
     function refresh() {
         var req = new XMLHttpRequest();
         req.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
-                print(this.responseText);
+                json = JSON.parse(this.responseText);
+                print(JSON.stringify(json.data));
                 // console.log("refreshed");
+                if(ft < 2) {
+                    setup();
+                }
+                ft += 1;
             }
         }
         req.open("POST", "/", true);

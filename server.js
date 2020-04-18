@@ -9,6 +9,7 @@ var cred = JSON.parse(fs.readFileSync("./credentials.json"));
 console.log(JSON.stringify(cred));
 
 const url = require("url");
+var queryString = require("querystring");
 
 const mongodb = require("mongodb");
 var MongoClient = mongodb.MongoClient;
@@ -165,6 +166,26 @@ MongoClient.connect(dburl, function(err, db) {
     });
     wtch.start();
     watchdogs.push(wtch);
+
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.alertsConfig), 10, {}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
+        var temp = {"oxy": [], "pulse": []};
+        //console.log("OXYalerts : changed !");
+        object.forEach(e => {
+            switch(e.category) {
+                case 1:
+                    temp.oxy.push(e);
+                    break;
+                case 2:
+                    temp.pulse.push(e)
+            }
+        });
+
+        // console.log(temp);
+
+        data.alertProfiles = temp;
+    });
+    wtch.start();
+    watchdogs.push(wtch);
 });
 
 console.log("Finished");
@@ -251,7 +272,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/", (req, res) => {
-    res.end(JSON.stringify(process(data)));
+    res.end(JSON.stringify({"data": process(data), "alertProfiles": data.alertProfiles}));
 })
 
 app.get("/patient", (req, res) => {
@@ -356,5 +377,101 @@ app.post("/user", (req, res) => {
         });
     }
 });
+
+app.post("/createConfig", (req, res) => {
+    var _url = decodeURI(req.url);
+    var regex = _url.replace(/\/createConfig\?filter=/, "");
+    var split = regex.split("&data=")
+
+    var _filter = JSON.parse(split[0]), filter = {};
+    var _update = JSON.parse(split[1]), update = {};
+
+    for(let [key, value] of Object.entries(_filter)) {
+        let val = parseInt(value);
+
+        if(isNaN(val))  val = value;
+
+        filter[key] = val;
+    }
+
+    for(let [key, value] of Object.entries(_update)) {
+        let val = parseInt(value);
+
+        if(isNaN(val))  val = value;
+
+        update[key] = val;
+    }
+
+    for(let [key, value] of Object.entries(update["config"])) {
+        let val = parseInt(value);
+
+        if(isNaN(val))  val = value;
+
+        update["config"][key] = val;
+    }
+
+    console.log(filter);
+    console.log(update);
+
+    var toInsert = {};
+
+    for(let [key, value] of Object.entries(filter)) {
+        toInsert[key] = value
+    }
+
+    for(let [key, value] of Object.entries(update)) {
+        toInsert[key] = value
+    }
+
+    console.log(toInsert);
+
+    database.collection(cred.db.db.ressources.alertsConfig).insertOne(toInsert);
+
+    res.end();
+})
+
+app.post("/alertConfig", (req, res) => {
+    var _url = decodeURI(req.url);
+    var regex = _url.replace(/\/alertConfig\?filter=/, "");
+    var split = regex.split("&data=")
+
+    var _filter = JSON.parse(split[0]), filter = {};
+    var _update = JSON.parse(split[1]), update = {};
+
+    for(let [key, value] of Object.entries(_filter)) {
+        let val = parseInt(value);
+
+        if(isNaN(val))  val = value;
+
+        filter[key] = val;
+    }
+
+    for(let [key, value] of Object.entries(_update)) {
+        let val = parseInt(value);
+
+        if(isNaN(val))  val = value;
+
+        update[key] = val;
+    }
+
+    for(let [key, value] of Object.entries(update["config"])) {
+        let val = parseInt(value);
+
+        if(isNaN(val))  val = value;
+
+        update["config"][key] = val;
+    }
+
+    console.log(filter);
+    console.log(update);
+
+    var ret = "Error"
+
+    database.collection(cred.db.db.ressources.alertsConfig).findOneAndUpdate(filter, {"$set": update}, (err, res) => {
+        ret = "ok"
+    });
+
+    res.end(ret);
+})
 
 app.listen(80);
