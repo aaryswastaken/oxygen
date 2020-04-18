@@ -225,16 +225,19 @@ function dumpDBfromURL(url, callback) {
                     toSend.OXYalerts = a;
                     database.collection(cred.db.db.ressources.PULSEalerts).find({"id": id}).sort({"date": -1}).toArray().then(a => {
                         toSend.PULSEalerts = a;
-                        database.collection(cred.db.db.ressources.notes).find({"id": id}).sort({"date": -1}).toArray().then(a => {
-                            toSend.notes = a;
+                        database.collection(cred.db.db.ressources.alertsConfig).find().toArray().then(a => {
+                            toSend.alertsConfig = a;
+                            database.collection(cred.db.db.ressources.notes).find({"id": id}).sort({"date": -1}).toArray().then(a => {
+                                toSend.notes = a;
 
-                            // console.log(JSON.stringify(toSend));
+                                // console.log(JSON.stringify(toSend));
 
-                            toSend.url = url;
-                            toSend.id = id;
+                                toSend.url = url;
+                                toSend.id = id;
 
-                            //res.end(JSON.stringify(toSend));
-                            callback(toSend);
+                                //res.end(JSON.stringify(toSend));
+                                callback(toSend);
+                            });
                         });
                     });
                 });
@@ -313,7 +316,45 @@ app.post("/settings", (req, res) => {
     fs.writeFileSync("./settings.json", JSON.stringify(settings));
     res.end(JSON.stringify(settings));
     settings = JSON.parse(fs.readFileSync("./settings.json"));
-    console.log(JSON.stringify(settings));
-})
+    // console.log(JSON.stringify(settings));
+});
+
+app.post("/user", (req, res) => {
+    console.log(req.url);
+    var id = -1;
+    var change = {};
+    url.parse(req.url).query.split("&").forEach(e => {
+        var split = e.split("=");
+        if (split.length === 2) {
+            if(split[0] === "id") {
+                id = parseInt(split[1]);
+            } else {
+                var _value;
+
+                _value = parseInt(decodeURI(split[1]))
+
+                if(isNaN(_value)) {
+                    _value = decodeURI(split[1])
+                }
+
+                change[decodeURI(split[0])] = _value
+            }
+        }
+    });
+
+    console.log("***********************************************************")
+    console.log(id);
+    console.log(change);
+
+    if(id !== -1) {
+        /*database.collection(cred.db.db.ressources.users).updateOne({'id': id}, {name: "test"}, function(err, res) {
+            if (err) throw err;
+            console.log("1 document updated");
+        });*/
+        database.collection(cred.db.db.ressources.users).findOneAndUpdate({"id": id}, {"$set": change}, (err, res) => {
+            console.log("hello")
+        });
+    }
+});
 
 app.listen(80);

@@ -23,10 +23,38 @@
     </div>
 </div>
 
+<div id="modifyUser" hidden>
+    <div id="mupopup">
+        <div id="muheader">
+            Ajouter une note
+            <i class="fa fa-close" id="muclosePopup" style="float: left;position:relative;left:15px;"></i>
+        </div>
+        <div id="muform">
+            <div id="muNom">
+                <label for="muNomInput">Nom Prénom : </label><br/>
+                <input class="settingsValue" id="muNomInput" type="text" name="name">
+            </div>
+            <div id="muChambre">
+                <label for="muChambreInput">Chambre : </label><br/>
+                <input class="settingsValue" type="text" id="muChambreInput" name="chambre"/>
+            </div>
+            <div id="muOXYalert">
+                <label for="muOXYalertInput">Profil d'alerte d'oxymetrie : </label><br/>
+                <input class="settingsValue" type="number" id="muOXYalertInput" name="oxy-alert"/><div id="muOXYprofileName"></div>
+            </div>
+            <div id="muPULSEalert">
+                <label for="muPULSEalertInput">Profil d'alert de pulsation cardiaque</label><br/>
+                <input class="settingsValue" type="number" id="muPULSEalertInput" name="pulse-alert"/><div id="muPULSEprofileName"></div>
+            </div>
+        </div>
+        <button id="modifyConfirm">Modifier ses paramètres</button>
+    </div>
+</div>
+
 <div>
     <div class="header">
         <div class="back"><i class="fa fa-arrow-left" style="font-size:36px;" onclick="window.history.back()"></i></div>
-        <div class="settings"><i class="fa fa-gear" style="font-size:36px;"></i></div>
+        <div class="settings"><i id="settings" class="fa fa-gear" style="font-size:36px;"></i></div>
         <div class="name"><%= data.users[0].name %> - <%= data.users[0].chambre %></div>
     </div>
     <table class="main">
@@ -180,6 +208,48 @@
         right: 5%;
         top: 20%;
     }
+
+    #modifyUser {
+        position: absolute;
+        width: 99%;
+        height: 98%;
+        background-color: rgba(0, 0, 0, 0.32);
+        z-index: 2;
+    }
+
+    #mupopup {
+        width: 50%;
+        height: 50%;
+        background-color: white;
+        position: relative;
+        top: 25%;
+        left: 25%;
+    }
+
+    #muheader {
+        text-align: center;
+        font-size: 2em;
+        position: relative;
+        top: 10px;
+    }
+
+    #muform {
+        position: relative;
+        top: 40px;
+        left: 20px;
+    }
+
+    #muNom {
+        width: 100%;
+        margin-right: 20px;
+    }
+
+    #modifyConfirm {
+        float: right;
+        position: relative;
+        right: 5%;
+        top: 20%;
+    }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
@@ -263,7 +333,6 @@
                 switch (e.level) {
                     case 0:
                         abort = <%= settings["showGreen"] %>;
-                    <% console.log(settings) %>
                         th_gravite.innerText = "Normal"
                         tr.style.backgroundColor = colors.normal;
                         //console.log("Abort");
@@ -549,7 +618,115 @@
         }
     }
 
+    //////////////////////////////////////////// EDIT USER ////////////////////////////////////////////////////
+
+    document.getElementById("settings").onclick = () => {
+        console.log("settings");
+        document.getElementById("modifyUser").hidden = false;
+    }
+
+    document.getElementById("muclosePopup").onclick = () => {
+        initSettings();
+        document.getElementById("modifyUser").hidden = true;
+    };
+
+    var alertsDisable = [];
+
+    document.getElementById("modifyConfirm").onclick = () => {
+        if(alertsDisable.length === 0) {
+            var changes = "";
+
+            var values = Array.from(document.getElementsByClassName("settingsValue"))
+
+            var itid = 1;
+
+            values.forEach(e => {
+                var buff = `${e.name}=${e.value}`;
+                if (itid < values.length) {
+                    buff += "&"
+                }
+                itid += 1;
+                changes += buff
+            })
+
+            var req = new XMLHttpRequest();
+            req.onreadystatechange = function () {
+                location.reload();
+            }
+            req.open("POST", "/user?id=" + json.users[0].id + "&" + changes, true);
+            req.send();
+        } else {
+            alert("Veuillez vérifier vos données")
+        }
+    }
+
+    var alertConfig = {"oxy": {}, "pulse": {}};
+
+    function initSettings() {
+        document.getElementById("muNomInput").value = json.users[0].name;
+        document.getElementById("muChambreInput").value = json.users[0].chambre;
+
+        json.alertsConfig.forEach( config => {
+            switch(config.category) {
+                case 1:
+                    alertConfig.oxy[config.id] = config;
+                    break;
+                case 2:
+                    alertConfig.pulse[config.id] = config;
+                    break;
+            }
+        });
+
+        document.getElementById("muOXYalertInput").onchange = () => {
+            var error = true
+            try {
+                document.getElementById("muOXYprofileName").innerText = "Nom du profil : " + alertConfig.oxy[parseInt(document.getElementById("muOXYalertInput").value)].name;
+                error = false;
+            } catch (e) {
+                document.getElementById("muOXYprofileName").innerText = "Ce profil n'existe pas"
+            }
+
+            if(error) {
+                if(!alertsDisable.includes("muOXYalert")) {
+                    alertsDisable.push("muOXYalert")
+                }
+            } else {
+                if(alertsDisable.includes("muOXYalert")) {
+                    alertsDisable.splice(alertsDisable.indexOf("muOXYalert"), 1);
+                }
+            }
+        }
+
+        document.getElementById("muPULSEalertInput").onchange = () => {
+            var error = true;
+            try {
+                document.getElementById("muPULSEprofileName").innerText = "Nom du profil : " + alertConfig.oxy[parseInt(document.getElementById("muPULSEalertInput").value)].name;
+                error = false;
+            } catch (e) {
+                document.getElementById("muPULSEprofileName").innerText = "Ce profil n'existe pas"
+            }
+
+            if(error) {
+                if(!alertsDisable.includes("muPULSEalert")) {
+                    alertsDisable.push("muPULSEalert")
+                }
+            } else {
+                if(alertsDisable.includes("muPULSEalert")) {
+                    alertsDisable.splice(alertsDisable.indexOf("muPULSEalert"), 1);
+                }
+            }
+        }
+
+        document.getElementById("muOXYalertInput").value = json.users[0]["oxy-alert"];
+        document.getElementById("muOXYalertInput").onchange();
+        document.getElementById("muPULSEalertInput").value = json.users[0]["pulse-alert"];
+        document.getElementById("muPULSEalertInput").onchange();
+    }
+
     //////////////////////////////////////////// REFRESH ////////////////////////////////////////////////////
+
+    var json = {};
+    var fTime = 0;
 
     function refresh_all() {
         setTimeout(refresh_all, <%= refresh_rate %>);
@@ -557,13 +734,17 @@
         var req = new XMLHttpRequest();
         req.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
-                var json = JSON.parse(this.responseText)
+                json = JSON.parse(this.responseText)
                 // console.log(json.OXYalerts);
                 refresh_OXYalerts(json.OXYalerts, json.PULSEalerts);
                 refresh_notes(json.notes);
                 refresh_graph(json.oxymeter, json.pulse);
                 //console.log(json);
                 // console.info("refreshed");
+                if(fTime < 2) {
+                    initSettings();
+                }
+                fTime += 1;
             }
         }
         req.open("POST", "/patient?"+<%= data.users[0].id%>, true);
