@@ -21,7 +21,7 @@ MongoClient.connect(url, function(err, db) {
     var wtch = new watchdog.Watchdog(oxymetre.collection("users"), 500000, {"id": 1}, 1000, object => {
         console.log("Sth changed !");
         object.forEach( e => {
-            oxymetre.collection("users").findOneAndUpdate({"id": e.id}, {"$set": {"oxy-alert": 1, "pulse-alert": 1}}, (err, res) => {
+            oxymetre.collection("users").findOneAndUpdate({"id": e.id}, {"$set": {"famille": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse pulvinar."}}, (err, res) => {
                 console.log("hello")
             });
         })
