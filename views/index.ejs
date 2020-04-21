@@ -6,6 +6,11 @@
         <div>
             <label for="ncol">Patient par lignes</label><input id="ncol" class="settingsInput" type="text" name="display.colQty" value="<%= settings["display.colQty"] %>"> <br/>
             <!--<label for="displayNoWarnings">Afficher les etats normaux (fenetre patient)</label><input id="displayNoWarnings" class="settingsInput" type="checkbox" name="showGreen" value="on" onclick="checkboxDisplayNoWarnings(this)">-->
+            <label for="sort">Trier par</label><select id="sort" class="settingsInput" name="sort">
+                <option id="id" value="0">ID</option>
+                <option id="chambre" value="1">Chambre</option>
+                <option id="nom" value="2">Nom</option>
+            </select>
             <br/><button id="modifyAlertProfiles">Avancé</button>
             <button id="send">Appliquer</button>
         </div>
@@ -172,6 +177,17 @@
     /////////// INIT ///////////////////////
     function init() {
         console.log(json);
+        switch(settings["sort"]) {
+            case 0:
+                document.getElementById("id").selected = true;
+                break;
+            case 1:
+                document.getElementById("chambre").selected = true;
+                break;
+            case 2:
+                document.getElementById("nom").selected = true;
+                break;
+        }
     }
 
     /////////// PRINT //////////////////////
