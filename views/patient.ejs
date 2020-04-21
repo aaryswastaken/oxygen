@@ -38,6 +38,15 @@
                 <label for="muChambreInput">Chambre : </label><br/>
                 <input class="settingsValue" type="text" id="muChambreInput" name="chambre"/>
             </div>
+            <div id="muDateNaissance">
+                <label for="muDateNaissanceInput">Date de naissance : </label><br/>
+                <input class="settingsValue" type="date" id="muDateNaissanceInput" name="birth"/>
+            </div>
+            <div id="muContactFamille">
+                <label for="muContactFamilleInput">Contact Famille : </label><br/>
+                <!--<input class="settingsValue" type="text" id="muContactFamilleInput" name="chambre"/>-->
+                <textarea class="settingsValue" id="muContactFamilleInput" name="famille"></textarea>
+            </div>
             <div id="muOXYalert">
                 <label for="muOXYalertInput">Profil d'alerte d'oxymetrie : </label><br/>
                 <input class="settingsValue" type="number" id="muOXYalertInput" name="oxy-alert"/><div id="muOXYprofileName"></div>
@@ -84,10 +93,14 @@
             </th>
         </tr>
         <tr>
-            <th colspan="2" class="title bordertop">Notes<i class="fa fa-plus" id="addNote" style="float: right;position: relative;right: 5px"></i></th>
+            <th class="title bordertop borderright">Informations</th>
+            <th class="title bordertop">Notes<i class="fa fa-plus" id="addNote" style="float: right;position: relative;right: 5px"></i></th>
         </tr>
         <tr>
-            <th colspan="2">
+            <th class="borderright">
+                <div id="infoPatient"></div>
+            </th>
+            <th>
                 <table id="message-body"> <!-- INNER CONTENT IN refresh_notes ()-->
                 </table>
             </th>
@@ -249,6 +262,10 @@
         position: relative;
         right: 5%;
         top: 20%;
+    }
+
+    #infoPatient {
+        text-align: left;
     }
 </style>
 
@@ -618,6 +635,30 @@
         }
     }
 
+    //////////////////////////////////////////// INFO USER ////////////////////////////////////////////////////
+
+    function _calculateAge(birthday) { // birthday is a date
+        var ageDifMs = Date.now() - birthday.getTime();
+        var ageDate = new Date(ageDifMs); // miliseconds from epoch
+        return Math.abs(ageDate.getUTCFullYear() - 1970);
+    }
+
+    function init() {
+        var infoPatient = document.getElementById("infoPatient");
+        var user = json.users[0];
+        var birth = new Date(user.birth);
+
+        infoPatient.innerHTML = "" +
+            "<div> Nom : "+user.name+"</div>" +
+            "<div> Identifiant : #"+user.id+"</div>" +
+            "<div> Chambre : "+user.chambre+"</div>" +
+            "<div> Date de naissance : "+birth.getDate()+"/"+(birth.getMonth()+1)+"/"+birth.getFullYear()+" ("+_calculateAge(birth)+"ans)" +
+            "<div> Contact Famille : "+user.famille+"</div>";
+
+
+        console.log(json);
+    }
+
     //////////////////////////////////////////// EDIT USER ////////////////////////////////////////////////////
 
     document.getElementById("settings").onclick = () => {
@@ -641,7 +682,13 @@
             var itid = 1;
 
             values.forEach(e => {
-                var buff = `${e.name}=${e.value}`;
+                var buff;
+                if(e.name !== "birth") {
+                    buff = `${e.name}=${e.value}`;
+                } else {
+                    var dt = new Date(e.value)
+                    buff = "birth="+dt.getTime();
+                }
                 if (itid < values.length) {
                     buff += "&"
                 }
@@ -665,6 +712,21 @@
     function initSettings() {
         document.getElementById("muNomInput").value = json.users[0].name;
         document.getElementById("muChambreInput").value = json.users[0].chambre;
+        var birth = new Date(json.users[0].birth);
+        var fullYear = birth.getFullYear();
+
+        var month = (birth.getMonth()+1).toString();
+        if(month.length !== 2) {
+            month = "0"+month;
+        }
+
+        var date = birth.getDate().toString();
+        if(date.length !== 2) {
+            date = "0"+date;
+        }
+
+        document.getElementById("muDateNaissanceInput").value = `${fullYear}-${month}-${date}`;
+        document.getElementById("muContactFamilleInput").value = json.users[0].famille;
 
         json.alertsConfig.forEach( config => {
             switch(config.category) {
@@ -744,6 +806,11 @@
                 if(fTime < 2) {
                     initSettings();
                 }
+
+                if(fTime < 1) {
+                    init();
+                }
+
                 fTime += 1;
             }
         }

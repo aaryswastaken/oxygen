@@ -12,11 +12,11 @@ Simple monitoring dashboard for oximeters
 - [X] FCS4
 - [X] FCS5
 - [X] FCS6 (sort)
-##### USER : PROGRESS
+##### USER : OK ( Priority 1, 2, 3 )
 - [X] FCS7
-- [ ] FCS8 
+- [X] FCS8 
 - [X] FCS9
-- [ ] FCS10
+- [X] FCS10
 - [X] FCS11
 - [X] FCS12
 - [ ] FCS13
