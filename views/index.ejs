@@ -1,3 +1,22 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<div class="settings"><i id="showSettings" class="fa fa-gear" style="font-size:36px;"></i>
+    <div id="popup" hidden>
+        <div>
+            <label for="ncol">Patient par lignes</label><input id="ncol" class="settingsInput" type="text" name="display.colQty" value="<%= settings["display.colQty"] %>"> <br/>
+            <!--<label for="displayNoWarnings">Afficher les etats normaux (fenetre patient)</label><input id="displayNoWarnings" class="settingsInput" type="checkbox" name="showGreen" value="on" onclick="checkboxDisplayNoWarnings(this)">-->
+            <label for="sort">Trier par</label><select id="sort" class="settingsInput" name="sort">
+                <option id="id" value="0">ID</option>
+                <option id="chambre" value="1">Chambre</option>
+                <option id="nom" value="2">Nom</option>
+            </select>
+            <br/><button id="modifyAlertProfiles">Avancé</button>
+            <button id="send">Appliquer</button>
+        </div>
+    </div>
+</div>
+
 <div id="title">Dashboard</div>
 
 <table id="mainTable">
@@ -60,18 +79,115 @@
         font-size: 12px;
         text-align: left;
     }
+    
+    .canvas {
+        float: right;
+        position: relative;
+        bottom: 50px;
+        height: 100%;
+    }
+
+    .cont {
+        position: relative;
+        left: 20px;
+    }
+
+    .settings {
+        float: right;
+        margin-right: 10px;
+        margin-top: 5px;
+    }
+
+    #popup {
+        border: black solid 1px;
+        position: fixed;
+        right: 1%;
+        background-color: white;
+        width: 15%;
+        z-index: 2;
+    }
+
+    #popup > div {
+        margin: 20px;
+    }
+
+    #send {
+        margin-top: 30px;
+    }
 </style>
 
 <script>
+    //////////////////// DEFINE /////////////
+
+    var colors = {}
+
+    colors.normal = "rgba(55,210,67,0.56)"
+    colors.warning = "rgba(210,176,55,0.56)"
+    colors.problem = "rgba(210,55,55,0.56)"
+    colors.critical = "rgba(255,0,0,0.78)"
+    colors.unknown = "rgba(230,0,255,0.72)"
+
+    colors.background1 = "rgba(142,142,142,0.42)"
+    colors.background2 = "rgba(224,224,224,0.57)"
+
+    ////////////////////////////////////////
+
     /////////// EJS DUMP ///////////////////
     var settings = <%- JSON.stringify(settings) %>
 
     /////////// DOM ELEMENTS ///////////////
     var DOMmainTable = document.getElementById("mainTable");
+    var DOMshowSettings = document.getElementById("showSettings");
+    var DOMpopup = document.getElementById("popup");
+    var DOMsendSettings = document.getElementById("send");
+
+    /////////// SETTINGS ///////////////////
+    console.log(DOMshowSettings)
+
+    DOMshowSettings.onclick = () => {
+        console.log("Hello");
+        DOMpopup.hidden = !DOMpopup.hidden;
+    }
+
+    DOMsendSettings.onclick = () => {
+        var toSend = "";
+        var settingsInput = document.getElementsByClassName("settingsInput");
+
+        var id = 0;
+        Array.from(settingsInput).forEach( e => {
+            toSend += (e.name+"="+e.value);
+            if(Array.from(settingsInput).length > id+1) {
+                toSend += ("&")
+            }
+            id += 1;
+        });
+
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                location.reload();
+            }
+        }
+        req.open("POST", "/settings?"+toSend, true);
+        req.send();
+
+        console.log(toSend);
+    }
 
     /////////// INIT ///////////////////////
     function init() {
         console.log(json);
+        switch(settings["sort"]) {
+            case 0:
+                document.getElementById("id").selected = true;
+                break;
+            case 1:
+                document.getElementById("chambre").selected = true;
+                break;
+            case 2:
+                document.getElementById("nom").selected = true;
+                break;
+        }
     }
 
     /////////// PRINT //////////////////////
@@ -85,7 +201,7 @@
         for(var n = 0;n<nLine;n+=1) {
             if(settings["display.colQty"] < 1) settings["display.colQty"] = 1;
 
-            if(settings["display.colQty"] <= 3) { // DEFINE
+            if(settings["display.colQty"] <= /*3*/ 10) { // DEFINE
                 var tr = document.createElement("tr");
                 var _data = json.data.slice(n*settings["display.colQty"], n*settings["display.colQty"]+settings["display.colQty"])
 
@@ -96,7 +212,7 @@
                     var th = document.createElement("th");
 
                     th.innerHTML = "" +
-                        "<table>" +
+                        "<div class=\"cont\" onclick=\"window.location.href = '/patient?" + e.id.toString() + "'\">" +
                         "   <div class=\"nom\">"+e.name + "</div>" +
                         //"   <div class=\"chambre\">" + e.chambre + "</div>" +
                         //"   <div class=\"id\">" + e.id + "</div>" +
@@ -105,9 +221,33 @@
                         "   <div class=\"alert\">" + e["oxy-alert"] + "-" + e["pulse-alert"] + "</div>" +
                         "   <div class=\"oxy\">" + e.concentration + "</div>" +
                         "   <div class=\"pulse\"> - " + e.pulsation + "</div>" +
+                        //////////////// GRAPH IMPOSSIBLE //////////////
+                        // "   <div class=\"chartContainer\"><canvas id=\"chart" + e.id + "\" class=\"canvas\"/></div>"
+                        ////////////////////////////////////////////////
                         // "   <div class=\"oxyAlert\">" + e["oxy-alert"] + "</div>" +
                         // "   <div class=\"pulseAlert\">" + e["pulse-alert"] + "</div>" +
-                        "</table>"
+                        "</div>"
+
+                    th.style.backgroundColor = colors.normal
+
+                    if(e["OXYlevel"] !== "undefined") {
+                        switch(e.OXYlevel) {
+                            case 0:
+                                th.style.backgroundColor = colors.normal;
+                                break;
+                            case 1:
+                                th.style.backgroundColor = colors.warning;
+                                break;
+                            case 2:
+                                th.style.backgroundColor = colors.problem;
+                                break;
+                            case 3:
+                                th.style.backgroundColor = colors.critical;
+                                break;
+                            case 4:
+                                th.style.backgroundColor = colors.unknown;
+                        }
+                    }
 
                     tr.appendChild(th);
                 });
@@ -120,6 +260,71 @@
                 }
 
                 DOMmainTable.appendChild(tr);
+
+                // var chart = document.getElementsByClassName("canvas");
+                // var charts = {};
+                // Array.from(chart).forEach( e => {
+                //     var ctx = e.getContext("2d");
+                //     charts[e.id.replace(/[a-zA-Z]*/, "")] = new Chart(ctx, {
+                //         type: 'line',
+                //         data: {
+                //             labels: [],
+                //             datasets: [{
+                //                 label: 'SPO2 (%)',
+                //                 yAxisID: "SpO2",
+                //                 data: [],
+                //                 backgroundColor: [
+                //                     'rgba(255, 99, 132, 0.2)',
+                //                 ],
+                //                 borderColor: [
+                //                     'rgba(255, 99, 132, 1)',
+                //                 ],
+                //                 borderWidth: 1
+                //             },
+                //                 {
+                //                     label: "BPM",
+                //                     yAxisID: "BPM",
+                //                     data: [],
+                //                     backgroundColor: [
+                //                         'rgba(131,195,224,0.51)'
+                //                     ],
+                //                     borderColor: [
+                //                         'rgba(131,195,224,0.94)'
+                //                     ],
+                //                     borderWidth: 1
+                //                 }]
+                //         },
+                //         options: {
+                //             scales: {
+                //                 yAxes: [{
+                //                     id: "SpO2",
+                //                     ticks: {
+                //                         beginAtZero: false
+                //                     },
+                //                     type: 'linear',
+                //                     position: "left"
+                //                 },
+                //                     {
+                //                         id: "BPM",
+                //                         ticks: {
+                //                             beginAtZero: false
+                //                         },
+                //                         type: 'linear',
+                //                         position: 'right'
+                //                     }]
+                //             },
+                //             animation: {
+                //                 duration: 0
+                //             },
+                //             responsive: true,
+                //             maintainAspectRatio: false,
+                //             responsiveAnimationDuration: 0,
+                //             aspectRatio: 1
+                //         }
+                //     });
+                // });
+                //
+                // console.log(charts);
             }
         }
     }

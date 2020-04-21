@@ -190,43 +190,58 @@ MongoClient.connect(dburl, function(err, db) {
 
 console.log("Finished");
 
-function process(object) {
+function process(object, callback) {
     var response = [];
 
-    object.users.forEach(e => {
-        if(!(e === null)) {
-            var obj = e;
+    var sort = {};
 
-            object.state.forEach(state => {
-                if(state.id === obj.id) {
-                    obj.concentration = state.concentration;
-                    obj.date = state.date;
-                }
-            });
+    switch (settings["sort"]) {
+        case 0:
+            sort = {id: 1};
+            break;
+        case 1:
+            sort = {chambre: 1};
+            break;
+        case 2:
+            sort = {name: 1}
+            break;
+    }
 
-            object.OXYalerts.forEach(alert => {
-                if(alert.id === obj.id) {
-                    obj.OXYlevel = alert.level;
-                }
-            })
+    database.collection(cred.db.db.ressources.users).find().sort(sort).toArray().then( a => {
+        a.forEach( e => {
+            if(!(e === null)) {
+                var obj = e;
 
-            object.pulse.forEach(pulse => {
-                if(pulse.id === obj.id) {
-                    obj.pulsation = pulse.pulsation;
-                }
-            })
+                object.state.forEach(state => {
+                    if(state.id === obj.id) {
+                        obj.concentration = state.concentration;
+                        obj.date = state.date;
+                    }
+                });
 
-            object.PULSEalerts.forEach(pulse => {
-                if(pulse.id === obj.id) {
-                    obj.PULSElevel = pulse.level;
-                }
-            })
+                object.OXYalerts.forEach(alert => {
+                    if(alert.id === obj.id) {
+                        obj.OXYlevel = alert.level;
+                    }
+                })
 
-            response.push(obj);
-        }
+                object.pulse.forEach(pulse => {
+                    if(pulse.id === obj.id) {
+                        obj.pulsation = pulse.pulsation;
+                    }
+                })
+
+                object.PULSEalerts.forEach(pulse => {
+                    if(pulse.id === obj.id) {
+                        obj.PULSElevel = pulse.level;
+                    }
+                })
+
+                response.push(obj);
+            }
+        });
+        callback(response);
     });
-
-    return response
 }
 
 function dumpDBfromURL(url, callback) {
@@ -268,16 +283,20 @@ function dumpDBfromURL(url, callback) {
 }
 
 app.get("/", (req, res) => {
+    settings = JSON.parse(fs.readFileSync("./settings.json"));
     res.render("index.ejs", {"settings": settings});
 });
 
 app.post("/", (req, res) => {
-    res.end(JSON.stringify({"data": process(data), "alertProfiles": data.alertProfiles}));
+    // res.end(JSON.stringify({"data": process(data), "alertProfiles": data.alertProfiles}));
+    process(data, result => {
+        res.end(JSON.stringify({"data": result, "alertProfiles": data.alertProfiles}));
+    })
 })
 
 app.get("/patient", (req, res) => {
     dumpDBfromURL(req.url, (toSend) => {
-        console.log(settings);
+        console.log(req.url);
         res.render("patient.ejs", { "data": toSend, "url": req.url, "refresh_rate": settings["patient.refresh_rate"], "settings": settings});
     })
 });
