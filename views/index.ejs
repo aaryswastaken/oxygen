@@ -1,4 +1,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<div class="settings"><i id="showSettings" class="fa fa-gear" style="font-size:36px;"></i>
+    <div id="popup" hidden>
+        <div>
+            <label for="ncol">Patient par lignes</label><input id="ncol" class="settingsInput" type="text" name="display.colQty" value="<%= settings["display.colQty"] %>"> <br/>
+            <!--<label for="displayNoWarnings">Afficher les etats normaux (fenetre patient)</label><input id="displayNoWarnings" class="settingsInput" type="checkbox" name="showGreen" value="on" onclick="checkboxDisplayNoWarnings(this)">-->
+            <br/><button id="modifyAlertProfiles">Avancé</button>
+            <button id="send">Appliquer</button>
+        </div>
+    </div>
+</div>
 
 <div id="title">Dashboard</div>
 
@@ -74,6 +86,29 @@
         position: relative;
         left: 20px;
     }
+
+    .settings {
+        float: right;
+        margin-right: 10px;
+        margin-top: 5px;
+    }
+
+    #popup {
+        border: black solid 1px;
+        position: fixed;
+        right: 1%;
+        background-color: white;
+        width: 15%;
+        z-index: 2;
+    }
+
+    #popup > div {
+        margin: 20px;
+    }
+
+    #send {
+        margin-top: 30px;
+    }
 </style>
 
 <script>
@@ -97,6 +132,42 @@
 
     /////////// DOM ELEMENTS ///////////////
     var DOMmainTable = document.getElementById("mainTable");
+    var DOMshowSettings = document.getElementById("showSettings");
+    var DOMpopup = document.getElementById("popup");
+    var DOMsendSettings = document.getElementById("send");
+
+    /////////// SETTINGS ///////////////////
+    console.log(DOMshowSettings)
+
+    DOMshowSettings.onclick = () => {
+        console.log("Hello");
+        DOMpopup.hidden = !DOMpopup.hidden;
+    }
+
+    DOMsendSettings.onclick = () => {
+        var toSend = "";
+        var settingsInput = document.getElementsByClassName("settingsInput");
+
+        var id = 0;
+        Array.from(settingsInput).forEach( e => {
+            toSend += (e.name+"="+e.value);
+            if(Array.from(settingsInput).length > id+1) {
+                toSend += ("&")
+            }
+            id += 1;
+        });
+
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                location.reload();
+            }
+        }
+        req.open("POST", "/settings?"+toSend, true);
+        req.send();
+
+        console.log(toSend);
+    }
 
     /////////// INIT ///////////////////////
     function init() {
