@@ -5,14 +5,16 @@ Simple monitoring dashboard for oximeters
 
 ## TODO
 
+##### Main Page
 - [X] FCS1
 - [X] FCS2
-- [ ] FCS3
+- [ ] FCS3 (nCol)
 - [X] FCS4
 - [X] FCS5
-- [ ] FCS6
+- [ ] FCS6 (sort)
+##### USER
 - [X] FCS7
-- [ ] FCS8
+- [ ] FCS8 
 - [X] FCS9
 - [ ] FCS10
 - [X] FCS11
@@ -23,6 +25,7 @@ Simple monitoring dashboard for oximeters
 - [X] FCS16
 - [X] FCS17
 - [ ] FCS18
+##### Settings
 - [ ] FCS19
 - [ ] FCS20
 - [X] FCS21
