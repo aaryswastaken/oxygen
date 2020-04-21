@@ -268,6 +268,7 @@ function dumpDBfromURL(url, callback) {
 }
 
 app.get("/", (req, res) => {
+    settings = JSON.parse(fs.readFileSync("./settings.json"));
     res.render("index.ejs", {"settings": settings});
 });
 
