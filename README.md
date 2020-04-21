@@ -5,11 +5,11 @@ Simple monitoring dashboard for oximeters
 
 ## TODO
 
-- [ ] FCS1
-- [ ] FCS2
+- [X] FCS1
+- [X] FCS2
 - [ ] FCS3
-- [ ] FCS4
-- [ ] FCS5
+- [X] FCS4
+- [X] FCS5
 - [ ] FCS6
 - [X] FCS7
 - [ ] FCS8
