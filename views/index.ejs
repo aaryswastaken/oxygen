@@ -69,9 +69,29 @@
         bottom: 50px;
         height: 100%;
     }
+
+    .cont {
+        position: relative;
+        left: 20px;
+    }
 </style>
 
 <script>
+    //////////////////// DEFINE /////////////
+
+    var colors = {}
+
+    colors.normal = "rgba(55,210,67,0.56)"
+    colors.warning = "rgba(210,176,55,0.56)"
+    colors.problem = "rgba(210,55,55,0.56)"
+    colors.critical = "rgba(255,0,0,0.78)"
+    colors.unknown = "rgba(230,0,255,0.72)"
+
+    colors.background1 = "rgba(142,142,142,0.42)"
+    colors.background2 = "rgba(224,224,224,0.57)"
+
+    ////////////////////////////////////////
+
     /////////// EJS DUMP ///////////////////
     var settings = <%- JSON.stringify(settings) %>
 
@@ -105,7 +125,7 @@
                     var th = document.createElement("th");
 
                     th.innerHTML = "" +
-                        "<div onclick=\"window.location.href = '/patient?" + e.id.toString() + "'\">" +
+                        "<div class=\"cont\" onclick=\"window.location.href = '/patient?" + e.id.toString() + "'\">" +
                         "   <div class=\"nom\">"+e.name + "</div>" +
                         //"   <div class=\"chambre\">" + e.chambre + "</div>" +
                         //"   <div class=\"id\">" + e.id + "</div>" +
@@ -120,6 +140,27 @@
                         // "   <div class=\"oxyAlert\">" + e["oxy-alert"] + "</div>" +
                         // "   <div class=\"pulseAlert\">" + e["pulse-alert"] + "</div>" +
                         "</div>"
+
+                    th.style.backgroundColor = colors.normal
+
+                    if(e["OXYlevel"] !== "undefined") {
+                        switch(e.OXYlevel) {
+                            case 0:
+                                th.style.backgroundColor = colors.normal;
+                                break;
+                            case 1:
+                                th.style.backgroundColor = colors.warning;
+                                break;
+                            case 2:
+                                th.style.backgroundColor = colors.problem;
+                                break;
+                            case 3:
+                                th.style.backgroundColor = colors.critical;
+                                break;
+                            case 4:
+                                th.style.backgroundColor = colors.unknown;
+                        }
+                    }
 
                     tr.appendChild(th);
                 });
