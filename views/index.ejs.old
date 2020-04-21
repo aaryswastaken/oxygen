@@ -1,0 +1,658 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+
+<div class="settings"><i id="showSettings" class="fa fa-gear" style="font-size:36px;"></i>
+    <div id="popup" hidden>
+        <div>
+            <label for="ncol">Patient par lignes</label><input id="ncol" class="settingsInput" type="text" name="display.colQty" value="<%= settings["display.colQty"] %>"> <br/>
+            <label for="displayNoWarnings">Afficher les etats normal (fenetre patient)</label><input id="displayNoWarnings" class="settingsInput" type="checkbox" name="showGreen" value="on" onclick="checkboxDisplayNoWarnings(this)">
+            <br/><button id="modifyAlertProfiles">Modifier les profils d'alerte</button>
+            <button id="send">Appliquer</button>
+        </div>
+    </div>
+</div>
+
+<div id="modifyAlertProfilesPopup" hidden>
+    <div id="mapopup">
+        <div id="maheader">
+            Modifier les profils d'alerte
+            <i class="fa fa-close" id="maclosePopup" style="float: left;position:relative;left:15px;"></i>
+        </div>
+        <div id="maform">
+            <input type="radio" name="context" value="oxy" id="oxyRadio"><label for="oxyRadio">Alertes d'oxymetrie</label><br/>
+            <input type="radio" name="context" value="pulse" id="pulseRadio"><label for="pulseRadio">Alertes de pulsation Cardiaques</label><br/>
+            <label for="profilSelect">Profil : </label><select id="profilSelect"></select><button id="addProfile">Ajouter un profil</button>
+            <div id="profilSettings">
+                <div id="profilId">Id : </div>
+                <label for="profilName">Nom de profil : </label><input type="text" id="profilName"><br/>
+                <label for="profilThreshold">Seuil : </label><input type="number" id="profilThreshold"><br/>
+                <label for="profilWarn">Warning (secondes) : </label><input type="number" id="profilWarn"><br/>
+                <label for="profilProblem">Problem (secondes) : </label><input type="number" id="profilProblem"><br/>
+                <label for="profilCritical">Critical (secondes) : </label><input type="number" id="profilCritical"><br/>
+            </div>
+        </div>
+        <button id="modifyConfirm">Modifier les profils</button>
+    </div>
+</div>
+
+<div style="border-bottom: black solid 1px">
+    <div style="float: left">
+        <label for="print">Valeures</label>
+        <div id="print">
+            <button id="printSPO2">SpO2</button>
+            <button id="printBPM"> BPM </button>
+            <button id="changePage"> Tourner </button>
+        </div>
+    </div>
+    <h1 style="width: 100%;text-align: center" id="title">Dashboard - SpO2</h1>
+</div>
+
+<div id="data">
+</div>
+
+<table>
+    <tbody id="tbody">
+        <!--
+        <tr>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+            <th>
+                <div class="nom">Foo Bar</div>
+                <div class="oxygen">85%</div>
+                <div class="chambre">D098</div>
+            </th>
+        </tr>--------->
+    </tbody>
+</table>
+
+<style>
+    th {
+        padding: 2px;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    .oxygen {
+        font-size: <%= (0-(40*settings["display.colQty"]))+600 %>%; // 10/row -> 200 | 5/row -> 400
+    }
+
+    .nom, .chambre {
+        font-size: <%= ((0-(40*settings["display.colQty"]))+600) / 2 %>%;
+    }
+
+    .settings {
+        float: right;
+        margin-right: 10px;
+        margin-top: 5px;
+    }
+
+    #popup {
+        border: black solid 1px;
+        position: fixed;
+        right: 1%;
+        background-color: white;
+        width: 15%;
+    }
+
+    #popup > div {
+        margin: 20px;
+    }
+
+    #send {
+        margin-top: 30px;
+    }
+
+    /*******************************************/
+    #modifyAlertProfilesPopup {
+        position: absolute;
+        width: 99%;
+        height: 98%;
+        background-color: rgba(0, 0, 0, 0.32);
+        z-index: 2;
+    }
+
+    #mapopup {
+        width: 50%;
+        height: 50%;
+        background-color: white;
+        position: relative;
+        top: 25%;
+        left: 25%;
+    }
+
+    #maheader {
+        text-align: center;
+        font-size: 2em;
+        position: relative;
+        top: 10px;
+    }
+
+    #maform {
+        position: relative;
+        top: 40px;
+        left: 20px;
+    }
+
+    #modifyConfirm {
+        float: right;
+        position: relative;
+        right: 5%;
+        top: 20%;
+    }
+</style>
+
+<script>
+    //////////////////// DEFINE /////////////
+
+    var colors = {}
+
+    colors.normal = "rgba(55,210,67,0.56)"
+    colors.warning = "rgba(210,176,55,0.56)"
+    colors.problem = "rgba(210,55,55,0.56)"
+    colors.critical = "rgba(255,0,0,0.78)"
+    colors.unknown = "rgba(230,0,255,0.72)"
+
+    /////////////////////////////////////////
+
+    document.getElementById("showSettings").onclick = () => {
+        document.getElementById("popup").hidden = !document.getElementById("popup").hidden;
+    }
+
+    var settingsInput = document.getElementsByClassName("settingsInput");
+    var canRefresh = true;
+
+    /*Array.from(settingsInput).forEach( e => {
+        e.onchange = () => {
+            canRefresh = false
+            var req = new XMLHttpRequest();
+            req.onreadystatechange = function () {
+                canRefresh = true;
+            }
+
+            console.log(e.value);
+            var value = e.value;
+
+            if(e.name === "showGreen") {
+                switch(e.value) {
+                    case "on":
+                        value = 1;
+                        break;
+                    case "off":
+                        value = 0;
+                        break;
+                }
+            }
+
+            console.log(e.name+" "+value)
+
+            req.open("POST", "/settings?"+e.name+"="+value, true);
+            req.send();
+        }
+    })*/
+
+    document.getElementById("ncol").onchange = () => {
+        var e = document.getElementById("ncol");
+        canRefresh = false
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            canRefresh = true;
+        }
+
+        req.open("POST", "/settings?"+e.name+"="+e.value, true);
+        req.send();
+    }
+
+    var disableOnClick = true;
+    if(<%= settings["showGreen"] ? 0:1 %>) document.getElementById("displayNoWarnings").click()
+    setTimeout(() => {
+        disableOnClick = false;
+    }, 250);
+
+    function checkboxDisplayNoWarnings (that) {
+        if (!disableOnClick) {
+            canRefresh = false
+            var req = new XMLHttpRequest();
+            req.onreadystatechange = function () {
+                canRefresh = true;
+                console.log("Finished : " + this.responseText);
+            }
+
+            console.log($(that).prop('checked'));
+            var value = 0;
+
+            switch (!$(that).prop('checked')) {
+                case true:
+                    value = 1;
+                    break;
+                case false:
+                    value = 0;
+                    break;
+            }
+
+            var urL = "/settings?showGreen=" + value.toString();
+
+            console.log(urL)
+
+            req.open("POST", urL, false);
+            req.send();
+        } else {
+            console.log("onclick disabled");
+        }
+    }
+
+    document.getElementById("send").onclick = () => {
+        if(!canRefresh) {
+            while(true){
+                if(canRefresh) break;
+            }
+        }
+
+        location.reload();
+    }
+
+    //////////////////////////////// MODIFIY ALERT PROFILES ///////////////////////////////
+
+    document.getElementById("modifyAlertProfiles").onclick = () => {
+        console.log("modifyAlertProfiles ");
+        document.getElementById("modifyAlertProfilesPopup").hidden = false
+    }
+
+    document.getElementById("maclosePopup").onclick = () => {
+        document.getElementById("modifyAlertProfilesPopup").hidden = true;
+    }
+
+    document.getElementById("modifyConfirm").onclick = () => {
+        console.log("Modify");
+    }
+
+    var isSelectedAlert = -1;
+    var id = -1;
+
+    document.getElementById("oxyRadio").onchange = () => { // is selected
+        isSelectedAlert = 0;
+
+        var _dom = document.getElementById("profilSelect");
+        _dom.innerHTML = "";
+
+        json.alertProfiles.oxy.forEach( e => {
+            var option = document.createElement("option");
+            option.innerText = `#${e.id}: ${e.name}`;
+            option.value = e.id.toString();
+
+            _dom.appendChild(option)
+        })
+
+        document.getElementById("profilSelect").onchange();
+    }
+
+    document.getElementById("pulseRadio").onchange = () => {
+        var _dom = document.getElementById("profilSelect");
+        _dom.innerHTML = "";
+
+        isSelectedAlert = 1;
+
+        json.alertProfiles.pulse.forEach( e => {
+            var option = document.createElement("option");
+            option.innerText = `#${e.id}: ${e.name}`;
+            option.value = e.id.toString();
+
+            _dom.appendChild(option)
+        });
+
+        document.getElementById("profilSelect").onchange();
+    }
+
+    document.getElementById("profilSelect").onchange = () => {
+        console.log(json.alertProfiles);
+
+        id = document.getElementById("profilSelect").value;
+
+        var source;
+        switch(isSelectedAlert) {
+            case 0:
+                source = json.alertProfiles.oxy;
+                break;
+            case 1:
+                source = json.alertProfiles.pulse;
+        }
+
+        var _data = source[id-1];
+
+        console.log(_data);
+
+        document.getElementById("profilId").innerText = "ID : " + _data.id.toString();
+        document.getElementById("profilName").value = _data.name;
+        document.getElementById("profilThreshold").value = _data.config.thre;
+        document.getElementById("profilWarn").value = _data.config.warn;
+        document.getElementById("profilProblem").value = _data.config.prob;
+        document.getElementById("profilCritical").value = _data.config.crit;
+    }
+
+    document.getElementById("modifyConfirm").onclick = () => {
+        var name = document.getElementById("profilName").value;
+        var thre = document.getElementById("profilThreshold").value;
+        var warn = document.getElementById("profilWarn").value;
+        var prob = document.getElementById("profilProblem").value;
+        var crit = document.getElementById("profilCritical").value;
+
+        if(parseInt(document.getElementById("profilSelect").value) !== -1) {
+            if (length(name) === 0 || length(thre) === 0 || length(warn) === 0 || length(prob) === 0 || length(crit) === 0) {
+                alert("Veuillez vérifier vos données");
+            } else {
+                console.log("Ok");
+                var post = `/alertConfig?filter=${JSON.stringify({
+                    "category": isSelectedAlert + 1,
+                    "id": id
+                })}&data=${JSON.stringify({
+                    "name": name,
+                    "config": {"thre": thre, "warn": warn, "prob": prob, "crit": crit}
+                })}`;
+                console.log(post);
+
+                var req = new XMLHttpRequest();
+                req.onreadystatechange = function () {
+                    location.reload();
+                }
+                req.open("POST", post, true);
+                req.send();
+            }
+        } else {
+            if (length(name) === -1 || length(thre) === -1 || length(warn) === -1 || length(prob) === -1 || length(crit) === -1) {
+                alert("Veuillez vérifier vos données");
+            } else {
+                console.log(id);
+                var post = `/createConfig?filter=${JSON.stringify({
+                    "category": isSelectedAlert + 1,
+                    "id": parseInt(id)+1
+                })}&data=${JSON.stringify({
+                    "name": name,
+                    "config": {"thre": thre, "warn": warn, "prob": prob, "crit": crit}
+                })}`;
+                console.log(post);
+
+                var req = new XMLHttpRequest();
+                req.onreadystatechange = function () {
+                    location.reload();
+                }
+                req.open("POST", post, true);
+                req.send();
+            }
+        }
+    }
+
+    function length(val) {
+        return val.toString().length;
+    }
+
+    function setup() {
+        document.getElementById("oxyRadio").checked = true;
+        document.getElementById("oxyRadio").onchange();
+    }
+
+    document.getElementById("addProfile").onclick = () => {
+        var _max = 0;
+        switch(isSelectedAlert) {
+            case 0: // oxy
+                _max = json.alertProfiles.oxy.length;
+                break;
+            case 1:
+                _max = json.alertProfiles.pulse.length;
+                break
+        }
+
+        var _dom = document.getElementById("profilSelect");
+
+        var option = document.createElement("option");
+        option.innerText = `#${_max+1}: NOUVELLE CONFIGURATION`;
+        option.value = "-1";
+        option.selected = true;
+
+        _dom.appendChild(option);
+
+        document.getElementById("profilId").innerText = "ID : "+(_max+1).toString()
+        document.getElementById("profilName").value = -1;
+        document.getElementById("profilThreshold").value = -1;
+        document.getElementById("profilWarn").value = -1;
+        document.getElementById("profilProblem").value = -1;
+        document.getElementById("profilCritical").value = -1;
+    }
+
+    /////////////////////////////////////////
+    var placeholder = document.getElementById("data");
+
+    var table = document.getElementById("tbody");
+
+    var printing = 0;
+    /*
+     * 0 : SpO2
+     * 1 : BPM
+     */
+
+    function print(data) {
+        // placeholder.innerText = data;
+        // console.log(data);
+
+        data = JSON.parse(data)
+
+        data.forEach(e => {
+            var _dom = document.getElementById(e.id.toString())
+            if(_dom === null) {
+                console.log("sth is missing")
+                table.innerHTML = ""; //cleanup
+                init(data);
+            } else {
+                _dom.onclick= () => {window.location.href="/patient?"+e.id.toString();}
+                switch (printing) {
+                    case 0:
+                        var color = colors.normal;
+                        switch(e.OXYlevel) {
+                            case 0:
+                                color = colors.normal;
+                                break;
+                            case 1:
+                                color = colors.warning;
+                                break;
+                            case 2:
+                                color = colors.problem;
+                                break;
+                            case 3:
+                                color = colors.critical;
+                                break;
+                            case 4:
+                                color = colors.unknown;
+                        }
+                        _dom.style.backgroundColor = color;
+                        _dom.innerHTML = "<div class=\"nom\">"+e.name+"</div><div class=\"oxygen\">"+e.concentration+"</div><div class=\"chambre\">"+e.chambre+"</div>"
+                        break;
+                    case 1:
+                        var color = colors.normal;
+                        switch(e.PULSElevel) {
+                            case 0:
+                                color = colors.normal;
+                                break;
+                            case 1:
+                                color = colors.warning;
+                                break;
+                            case 2:
+                                color = colors.problem;
+                                break;
+                            case 3:
+                                color = colors.critical;
+                                break;
+                            case 4:
+                                color = colors.unknown;
+                        }
+                        _dom.style.backgroundColor = color;
+                        _dom.innerHTML = "<div class=\"nom\">"+e.name+"</div><div class=\"oxygen\">"+e.pulsation+"</div><div class=\"chambre\">"+e.chambre+"</div>"
+                        break;
+                }
+            }
+        })
+    }
+
+    document.getElementById("printSPO2").onclick = () => {
+        turn_stop = true;
+        printing = 0;
+        table.innerHTML = ""; //cleanup
+        document.getElementById("title").innerText = "Dashboard - Sp02"
+        refresh();
+    }
+
+    document.getElementById("printBPM").onclick = () => {
+        turn_stop = true;
+        printing = 1;
+        table.innerHTML = ""; //cleanup
+        document.getElementById("title").innerText = "Dashboard - BPM"
+        refresh();
+    }
+
+    var state = false;
+
+    function turn() {
+        if(state) {
+            printing = 0;
+            table.innerHTML = ""; //cleanup
+            document.getElementById("title").innerText = "Dashboard - Sp02"
+            refresh();
+        } else {
+            printing = 1;
+            table.innerHTML = ""; //cleanup
+            document.getElementById("title").innerText = "Dashboard - BPM"
+            refresh();
+        }
+        state = !state;
+        if(!turn_stop) {
+            setTimeout(turn, <%= settings["turnPeriod"]%>);
+        }
+    }
+
+    document.getElementById("changePage").onclick = () => {
+        turn_stop = false;
+        turn();
+    }
+
+    function init(data) {
+        var toPrint = [[]]
+        var x = 0;
+        var y = 0;
+
+        data.forEach(e => {
+            if(x< <%= settings["display.colQty"] %> ) {
+                toPrint[y].push(e)
+            } else {
+                toPrint.push([e])
+                y += 1;
+                x = 0;
+            }
+            x += 1;
+        });
+
+        toPrint.forEach( elements => {
+            tr = document.createElement("tr");
+            tr.id = "tr#"+x;
+            elements.forEach( element => {
+                th = document.createElement("th");
+
+                th.id = element.id
+                var color = colors.normal;
+                switch(element.level) {
+                    case 0:
+                        color = colors.normal;
+                        break;
+                    case 1:
+                        color = colors.warning;
+                        break;
+                    case 2:
+                        color = colors.problem;
+                        break;
+                    case 3:
+                        color = colors.critical;
+                        break;
+                    case 4:
+                        color = colors.unknown;
+                }
+                th.onclick = () => {window.location.href="/patient?"+element.id.toString();}
+                th.style.backgroundColor = color
+                th.innerHTML = "<div class=\"nom\">"+element.name+"</div><div class=\"oxygen\">"+element.concentration+"</div><div class=\"chambre\">"+element.chambre+"</div>"
+
+                tr.appendChild(th);
+            })
+            x += 1;
+            table.appendChild(tr);
+        })
+    }
+
+    var ft = 0;
+
+    var json = {};
+
+    function refresh() {
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                json = JSON.parse(this.responseText);
+                print(JSON.stringify(json.data));
+                // console.log("refreshed");
+                if(ft < 2) {
+                    setup();
+                }
+                ft += 1;
+            }
+        }
+        req.open("POST", "/", true);
+        req.send();
+    }
+
+    function loop() {
+        setTimeout(loop, 500);
+        refresh();
+    }
+
+    loop();
+</script>
