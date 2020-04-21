@@ -278,7 +278,7 @@ app.post("/", (req, res) => {
 
 app.get("/patient", (req, res) => {
     dumpDBfromURL(req.url, (toSend) => {
-        console.log(settings);
+        console.log(req.url);
         res.render("patient.ejs", { "data": toSend, "url": req.url, "refresh_rate": settings["patient.refresh_rate"], "settings": settings});
     })
 });
