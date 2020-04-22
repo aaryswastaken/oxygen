@@ -1,1 +1,1 @@
-{"display.colQty":3,"database.period":2000,"database.limit":500,"database.cleaner.data.period":10000,"patient.refresh_rate":500,"showGreen":0,"turnPeriod":5000,"sort":0}
+{"display.colQty":3,"database.period":3000,"database.limit":500,"database.cleaner.data.period":10000,"patient.refresh_rate":500,"showGreen":0,"turnPeriod":5000,"sort":1,"showGraph":0,"showCaptID":1,"showBPM":1,"showSPO2alertThreshold":1,"showBPMalertThreshold":1,"showSPO2alertDelay":1,"showCID":1,"local":"fr-fr","dateFormat":"fr","hourFormat":"24","printType":1}
