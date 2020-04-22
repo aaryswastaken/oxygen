@@ -12,4 +12,4 @@ For export : https://github.com/Moblox/mongo-xlsx
 ##### USER : OK ( Priority 1, 2, 3 )
 
 ##### Settings : PAGE FINISHED 
-TODO : INPLEMENTATION
+TODO : IMPLEMENTATION
