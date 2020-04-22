@@ -1,0 +1,416 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+<div id="title">
+    <div class="back"><i class="fa fa-arrow-left" style="font-size:36px;" onclick="window.history.back()"></i></div>
+    <div class="header">Paramètres avancés</div>
+</div>
+
+<table>
+    <tr>
+        <th>
+            <div>
+                <h1 class="header">Affichage</h1>
+            </div>
+            <table>
+                <tr>
+                    <th>Mode d'affichage</th>
+                    <th>
+                        <select id="printType" name="printType" class="value">
+                            <option value=0>Mosaique</option>
+                            <option value=1>Tableau</option>
+                        </select>
+                    </th>
+                </tr>
+                <tr>
+                    <th>Tri</th>
+                    <th>
+                        <select id="sort" name="sort" class="value">
+                            <option value=0>ID</option>
+                            <option value=1>#Chambre</option>
+                            <option value=2>Nom</option>
+                        </select>
+                    </th>
+                </tr>
+                <tr>
+                    <th>Afficher graphique SpO2</th>
+                    <th>
+                        <input id="showGraph" name="showGraph" class="value" type="checkbox" onclick="alert('Cette option nest valide que lors dun affichage en mode tableau et avec un nombre de colone inférieur ou égal à 2');"/>
+                    </th>
+                </tr>
+                <tr>
+                    <th>Afficher #ID capteur</th>
+                    <th>
+                        <input id="showCaptID" name="showCaptID" class="value" type="checkbox">
+                    </th>
+                </tr>
+                <tr>
+                    <th>Afficher BPM</th>
+                    <th>
+                        <input id="showBPM" name="showBPM" class="value" type="checkbox">
+                    </th>
+                </tr>
+                <tr>
+                    <th>Afficher seuil alerte (Sp02)</th>
+                    <th>
+                        <input id="showSPO2alertThreshold" name="showSPO2alertThreshold" class="value" type="checkbox">
+                    </th>
+                </tr>
+                <tr>
+                    <th>Afficher delai alerte (Sp02)</th>
+                    <th>
+                        <input id="showSPO2alertDelay" name="showSPO2alertDelay" class="value" type="checkbox">
+                    </th>
+                </tr>
+                <tr>
+                    <th>Afficher seuil alerte (BPM)</th>
+                    <th>
+                        <input id="showBPMalertThreshold" name="showBPMalertThreshold" class="value" type="checkbox">
+                    </th>
+                </tr>
+                <tr>
+                    <th>Afficher chambre</th>
+                    <th>
+                        <input id="showCID" name="showCID" class="value" type="checkbox">
+                    </th>
+                </tr>
+            </table>
+        </th>
+        <th>
+            <div>
+                <h1 class="header">Système</h1>
+            </div>
+            <div>
+                <label>
+                    Période d'acquisition (ms)<br/>
+                    <input type="number" class="value" id="refreshPeriod" name="database.period">
+                </label><br/>
+                <label>
+                    Langue du système <br/>
+                    <select id="local" class="value" name="local">
+                        <option value="fr-fr">Français</option>
+                    </select>
+                </label><br/>
+                <label>
+                    Format de date<br/>
+                    <select id="dateFormat" class="value" name="dateFormat">
+                        <option value="fr">JJ/MM/YYYY</option>
+                        <!--<option>MM/JJ/YYYY</option>-->
+                    </select>
+                </label><br/>
+                <label>
+                    Format d'heure<br/>
+                    <select id="hourFormat" class="value" name="hourFormat">
+                        <!--<option value="12">12H</option>-->
+                        <option value="24">24H</option>
+                    </select>
+                </label>
+            </div>
+        </th>
+        <th id="thAlerte">
+            <div>
+                <h1 class="header">Alertes</h1>
+            </div>
+            <div>
+                <label>
+                    Type<br/>
+                    <select id="selectAlertType">
+                        <option value=0>Oxymetrie</option>
+                        <option value=1>BPM</option>
+                    </select>
+                </label><br/>
+                <label>
+                    Préconfig Alerte <br/>
+                    <select id="selectAlertID">
+                        <!--<option>#0 : OXY-GENERAL</option>-->
+                    </select><br/>
+                </label>
+            </div>
+            <div>
+                <label>
+                    Nom config<br/>
+                    <input type="text" id="selectSPO2name">
+                </label><br/>
+                <label>
+                    Seuil alerte<br/>
+                    <input type="number" id="selectSPO2threshold">
+                </label><br/>
+                <label>
+                    Delai alerte<br/>
+                    <input type="number" id="selectSPO2delay">
+                </label><br/>
+                <label>
+                    Type de traitement<br/>
+                    <select id="selectTypeThreshold">
+                        <option value=0>Dépassement</option>
+                        <option value=1>Moyenne glissante (2 relevés)</option>
+                        <option value=2>Moyenne glissante (5 relevés)</option>
+                        <option value=3>Moyenne glissante (10 relevés)</option>
+                        <option value=4>Moyenne glissante (20 relevés)</option>
+                        <option value=5>Moyenne glissante (50 relevés)</option>
+                        <option value=6>Moyenne glissante (100 relevés)</option>
+                    </select>
+                </label><br/>
+            </div>
+        </th>
+        <th id="thExport">
+            <div>
+                <h1 class="header">Export</h1>
+            </div>
+            <div>
+                <label>
+                    Nom du fichier (sans extension)<br/>
+                    <input type="text" id="exportFileName">
+                </label><br/>
+                <label>
+                    Extension<br/>
+                    <select id="exportExtension">
+                        <option value=".csv" selected>CSV</option>
+                        <option value=".xlsx">XLSX</option>
+                    </select>
+                </label><br/>
+                <label>
+                    Données<br/>
+                    <select id="exportData">
+                        <option value="userInfo" selected>Informations utilisateur</option>
+                        <option value="oxy">Historique Sp02</option>
+                        <option value="pulse">Historique BPM</option>
+                    </select>
+                </label><br/>
+                <label>
+                    ID de l'utilisateur (0 si tout utilisateur)<br/>
+                    <input type="number" value="0" id="exportUserID">
+                    <div id="exportUserName">
+                        Tout les utilisateurs
+                    </div>
+                </label><br/>
+            </div>
+        </th> <!-- https://github.com/Moblox/mongo-xlsx -->
+    </tr>
+    <tr>
+        <th colspan="2"><button id="sendDisplaySettings">Enregistrer</button></th>
+        <th><button id="sendAlertConfig">Enregistrer</button></th>
+        <th><button id="export">Télécharger</button></th>
+    </tr>
+
+</table>
+
+<style>
+    #title {
+        width: 100%;
+        border-bottom: black solid 1px;
+    }
+
+    #title > .header {
+        text-align: center;
+        font-size: 3em;
+    }
+
+    th {
+        width: 25%;
+    }
+
+    th > div > h1.header {
+        text-align: center;
+        font-size: 2em;
+    }
+
+    .back {
+        float: left;
+        position: relative;
+        left: 10px;
+        top: 5px;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    #thAlerte > div:nth-child(1n+2) {
+        text-align: left;
+    }
+</style>
+
+<script>
+    var actualSettings = <%- JSON.stringify(settings) %>
+
+    var json = {};
+
+    function refresh() {
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                json = JSON.parse(this.responseText);
+                init();
+            }
+        }
+        req.open("POST", "/", true);
+        req.send();
+    }
+
+    function init() {
+        /////////////////////////////////////// CHECKBOXES ///////////////////////////////////////
+        document.getElementById("showGraph").checked = actualSettings.showGraph;
+        document.getElementById("showCaptID").checked = actualSettings.showCaptID;
+        document.getElementById("showBPM").checked = actualSettings.showBPM;
+        document.getElementById("showSPO2alertThreshold").checked = actualSettings["showSPO2alertThreshold"];
+        document.getElementById("showSPO2alertDelay").checked = actualSettings["showSPO2alertDelay"];
+        document.getElementById("showBPMalertThreshold").checked = actualSettings["showBPMalertThreshold"];
+        document.getElementById("showCID").checked = actualSettings["showCID"];
+
+        document.getElementById("refreshPeriod").value = actualSettings["database.period"];
+
+        ///////////////////////////////////////// SELECTS //////////////////////////////////////////
+        document.getElementById("printType").value = actualSettings.printType;
+        document.getElementById("sort").value = actualSettings.sort;
+
+        document.getElementById("selectAlertType").onchange = () => {
+            let value = document.getElementById("selectAlertType").value;
+            console.log(json);
+            let dom = document.getElementById("selectAlertID")
+            dom.innerHTML = "";
+            let id=0;
+            if(value == 1) {
+                console.log("BPM");
+                json.alertProfiles.pulse.forEach( profile => {
+                    let option = document.createElement("option");
+                    option.value = id;
+                    option.innerText = `#${profile.id} : ${profile.name}`;
+
+                    dom.appendChild(option);
+                    id += 1;
+                });
+            } else {
+                console.log("OXY");
+                json.alertProfiles.oxy.forEach( profile => {
+                    let option = document.createElement("option");
+                    option.value = id;
+                    option.innerText = `#${profile.id} : ${profile.name}`;
+
+                    dom.appendChild(option);
+                    id += 1
+                });
+            }
+            selectAlertIdChange();
+        }
+        document.getElementById("selectAlertType").onchange() // INITIALIZE
+
+        document.getElementById("selectAlertID").onchange = () => {
+            selectAlertIdChange();
+        }
+
+        function selectAlertIdChange() {
+            let dom = document.getElementById("selectAlertID");
+            console.log(dom.value);
+            let data = {};
+            if(document.getElementById("selectAlertType").value == 0) {
+                data = json.alertProfiles.oxy[parseInt(dom.value)];
+            } else {
+                data = json.alertProfiles.pulse[parseInt(dom.value)];
+            }
+
+            console.log(data);
+
+            document.getElementById("selectSPO2name").value = data.name;
+            document.getElementById("selectSPO2threshold").value = data.config.thre;
+            document.getElementById("selectSPO2delay").value = data.config.prob;
+            document.getElementById("selectTypeThreshold").value = data.config.type;
+        }
+
+        document.getElementById("sendAlertConfig").onclick = () => {
+            console.log("hello");
+
+            let category = parseInt(document.getElementById("selectAlertType").value);
+            let id = parseInt(document.getElementById("selectAlertID").value);
+
+            let name = document.getElementById("selectSPO2name").value;
+            let thre = document.getElementById("selectSPO2threshold").value;
+            let prob = parseInt(document.getElementById("selectSPO2delay").value);
+            let warn = Math.floor(prob*0.5);
+            let crit = 2*prob;
+
+            let type = parseInt(document.getElementById("selectTypeThreshold").value)
+
+            let post = `/alertConfig?filter=${JSON.stringify({
+                "category": category + 1,
+                "id": id+1
+            })}&data=${JSON.stringify({
+                "name": name,
+                "config": {"thre": thre, "warn": warn, "prob": prob, "crit": crit, "type": type}
+            })}`;
+            console.log(post);
+
+            var req = new XMLHttpRequest();
+            req.onreadystatechange = function () {
+                location.reload();
+            }
+            req.open("POST", post, true);
+            req.send();
+        }
+
+        ////////////////////////////////////////// INPUTS ////////////////////////////////////////
+
+        document.getElementById("exportUserID").oninput = () => {
+            let mod = document.getElementById("exportUserName");
+            let dom = document.getElementById("exportUserID");
+
+            if(dom.value == 0) {
+                mod.innerText = "Tout les utilisateurs"
+            } else {
+                let req = new XMLHttpRequest();
+                req.onreadystatechange = () => {
+                    if (req.readyState == 4) {
+                        let json = JSON.parse(req.responseText);
+                        mod.innerText = json.users[0].name
+                    }
+                }
+
+                req.open("POST", "/patient?" + dom.value, true);
+                req.send();
+            }
+        }
+
+        ///////////////////////////////////////// BUTTONS ///////////////////////////////////////////
+        document.getElementById("sendDisplaySettings").onclick = () => {
+            let toSend = "";
+            let values = Array.from(document.getElementsByClassName("value"));
+            let id=0;
+            values.forEach( e => {
+                if(e.type == "checkbox") {
+                    toSend += (e.name + "=" + (e.checked ? "1":"0"))
+                } else {
+                    toSend += (e.name + "=" + e.value)
+                }
+                if((id+1) < values.length) {
+                    toSend += "&"
+                }
+                id += 1;
+            });
+
+            console.log(toSend);
+            let req = new XMLHttpRequest()
+            req.onreadystatechange = () => {
+                // alert("Modifications enregistrées")
+            }
+            req.open("POST", "/settings?"+toSend, true)
+            req.send()
+        }
+
+        document.getElementById("export").onclick = () => {
+            let filename = document.getElementById("exportFileName").value;
+            let extension = document.getElementById("exportExtension").value;
+            let userid = parseInt(document.getElementById("exportUserID").value);
+            let dump = document.getElementById("exportData").value;
+
+            let url = `/dump?id=${userid}&file=${filename}&ext=${extension}&dump=${dump}`;
+            console.log(extension);
+
+            /*let req = new XMLHttpRequest();
+            req.open("GET", url, true);
+            req.send();*/
+            window.open(url);
+        }
+    }
+
+    refresh();
+</script>

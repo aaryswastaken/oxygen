@@ -6,6 +6,9 @@ const fs = require("fs");
 var settings = JSON.parse(fs.readFileSync("./settings.json"));
 var cred = JSON.parse(fs.readFileSync("./credentials.json"));
 
+const MONGOxlsx = require("mongo-xlsx");
+const MONGOcsv = require("json2csv")
+
 console.log(JSON.stringify(cred));
 
 const url = require("url");
@@ -359,6 +362,10 @@ app.post("/settings", (req, res) => {
     // console.log(JSON.stringify(settings));
 });
 
+app.get("/config", (req, res) => {
+    res.render("config.ejs", {"settings": settings})
+})
+
 app.post("/user", (req, res) => {
     console.log(req.url);
     var id = -1;
@@ -491,6 +498,60 @@ app.post("/alertConfig", (req, res) => {
     });
 
     res.end(ret);
+});
+
+app.get("/dump", (req, res) => {
+    // /dump?id=${userid}&file=${filename}&ext=${extension}&dump=${dump}
+    let url = decodeURI(req.url).replace(/\/dump\?/, "");
+    let split = url.split("&");
+    let json = {};
+    split.forEach(e => {
+        let splitEqual = e.split("=");
+        json[splitEqual[0]] = splitEqual[1]
+    })
+    console.log(json);
+
+    let promise;
+    switch (json.dump) {
+        case "userInfo":
+            promise = database.collection(cred.db.db.ressources.users).find({"id": parseInt(json.id)}).toArray();
+            break;
+        case "oxy":
+            promise = database.collection(cred.db.db.ressources.data).find({"id": parseInt(json.id)}).toArray();
+            break;
+        case "pulse":
+            promise = database.collection(cred.db.db.ressources.pulse).find({"id": parseInt(json.id)}).toArray();
+            break;
+    }
+
+    promise.then( obj => {
+        let data;
+        let headerType;
+        let ok = false;
+        switch (json.ext) {
+            case ".csv":
+                data = MONGOcsv.parse(obj);
+                headerType = "text/csv";
+                ok = true;
+                break;
+            case ".xlsx":
+                var model = MONGOxlsx.buildDynamicModel(obj);
+
+                /* Generate Excel */
+                data = MONGOxlsx.mongoData2Xlsx(obj, model/*, function(err, dt) {
+                    console.log('File saved at:', dt.fullPath);
+                    data = fs.readFileSync(dt.fullPath);
+                    headerType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    ok = true;
+                }*/);
+        }
+
+        while(!ok) {}
+        res.setHeader('Content-disposition', 'attachment; filename='+json.file+json.ext);
+        res.set('Content-Type', headerType);
+        console.log(data);
+        res.status(200).send(data);
+    })
 })
 
 app.listen(80);
