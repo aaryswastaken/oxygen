@@ -14,6 +14,16 @@ console.log(JSON.stringify(cred));
 const url = require("url");
 var queryString = require("querystring");
 
+const pwd = require("node-php-password");
+var auth = fs.readFileSync("./authentication.json");
+auth = JSON.parse(auth);
+
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}))
+
 const mongodb = require("mongodb");
 var MongoClient = mongodb.MongoClient;
 
@@ -362,8 +372,46 @@ app.post("/settings", (req, res) => {
     // console.log(JSON.stringify(settings));
 });
 
+// TODO : Add authentication
+
 app.get("/config", (req, res) => {
-    res.render("config.ejs", {"settings": settings})
+    console.log(req.cookies);
+    var error = 0;
+    if(Object.keys(req.cookies).length === 0) {
+        error += 1;
+    } else {
+        if(req.cookies["isAuth"] === "1") {
+            res.render("config.ejs", {"settings": settings})
+        } else {
+            error += 1;
+        }
+    }
+
+    if(error !== 0) {
+        // res.end("Plz login");
+        res.render("login.ejs", {"from": "/config", "failed": false})
+    }
+});
+
+app.post("/login", (req, res) => {
+    console.log(req.body);
+    let isAuth = false;
+    try {
+        let hashed =  auth[req.body.username].hash;
+        console.log("hashed : "+hashed)
+        isAuth = pwd.verify(req.body.password, hashed);
+    } catch (e) {
+        console.log("An error occured : "+e);
+        res.render("login.ejs", {"failed": true, "from": req.body.from})
+    }
+    console.log("Is auth ?"+isAuth);
+    res.cookie("isAuth", "1");
+    res.render("relocator.ejs", {"from": req.body.from})
+})
+
+app.get("/logout", (req, res) => {
+    res.cookie("isAuth", "0");
+    res.render("relocator.ejs", {"from": "/"})
 })
 
 app.post("/user", (req, res) => {

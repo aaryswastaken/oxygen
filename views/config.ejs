@@ -2,7 +2,8 @@
 
 
 <div id="title">
-    <div class="back"><i class="fa fa-arrow-left" style="font-size:36px;" onclick="window.history.back()"></i></div>
+    <div class="back"><i class="fa fa-arrow-left" style="font-size:36px;" onclick="window.location.href = '/'"></i></div>
+    <div class="logout"><i class="fa fa-sign-out" style="font-size: 36px;" onclick="window.location.href='/logout'"></i></div>
     <div class="header">Paramètres avancés</div>
 </div>
 
@@ -228,6 +229,13 @@
 
     #thAlerte > div:nth-child(1n+2) {
         text-align: left;
+    }
+
+    .logout {
+        float: right;
+        position: relative;
+        top: 5px;
+        right: 10px;
     }
 </style>
 
