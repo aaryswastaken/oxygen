@@ -1,0 +1,49 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<div class="header">
+    <div class="back"><i class="fa fa-arrow-left" style="font-size:36px;" onclick="window.history.back()"></i></div>
+    <div>Connection</div>
+</div>
+
+<div class="form">
+    <% if(failed) { %>
+        <div style="color: red">Login incorrect</div>
+    <% } %>
+    <form action="/login" method="post">
+        <label>
+            Nom d'utilisateur
+            <input name="username" type="text">
+        </label><br/>
+        <label>
+            Mot de passe
+            <input name="password" type="password">
+        </label><br/>
+        <input type="hidden" name="from" value="<%= from %>">
+        <input type="submit">
+    </form>
+</div>
+
+<style>
+    .header {
+        width: 100%;
+        border-bottom: black solid 1px;
+    }
+
+    .back {
+        float: left;
+        position: relative;
+        top: 10px;
+        left: 10px;
+    }
+
+    .header:nth-child(1) {
+        font-size: 3em;
+        text-align: center;
+        position: relative;
+        bottom: 10px;
+    }
+</style>
+
+<script>
+    console.log("<%= from %>")
+</script>

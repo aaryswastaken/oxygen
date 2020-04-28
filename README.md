@@ -5,7 +5,7 @@ Simple monitoring dashboard for oximeters
 
 ## TODO
 
-For export : https://github.com/Moblox/mongo-xlsx
+For export : [Mongo XLSX](https://github.com/Moblox/mongo-xlsx)
 
 ##### Main Page : OK
 
