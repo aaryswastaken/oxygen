@@ -54,7 +54,8 @@ var database;   // The connection
 MongoClient.connect(dburl, function(err, db) {
 // **** BEGIN DATABASE CONNECTION PROMISE ****
     if (err) {
-        console.log("Error : "+err);  // Print any errors
+        /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
+        console.error("Error : "+err);  // Print any errors
     }
 
     var oxymetre = db.db(cred.db.db.name);  // Get the database instance
@@ -108,7 +109,7 @@ MongoClient.connect(dburl, function(err, db) {
         (object) =>{
             return object.length > 150000},
         (err, obj) => {
-            console.log("[data] " + obj.result.n.toString() + " entry deleted"); // LOG
+            // console.log("[data] " + obj.result.n.toString() + " entry deleted"); // LOG
         }); // 1000 (s) * 1000 = (ms)
     cleaner.start();
     cleaners.push(cleaner);
@@ -166,7 +167,7 @@ MongoClient.connect(dburl, function(err, db) {
         (object) =>{
             return object.length > 150000},
         (err, obj) => {
-            console.log("[data] " + obj.result.n.toString() + " entry deleted");  // LOG
+            // console.log("[data] " + obj.result.n.toString() + " entry deleted");  // LOG
         }); // 1000 (s) * 1000 = (ms)
     cleaner.start();
     cleaners.push(cleaner);
@@ -427,7 +428,7 @@ app.post("/settings", (req, res) => {
 // GET \ BROWSER \ ACCESS CONFIG PAGE
 // TODO : code a more secure connection by using a session id
 app.get("/config", (req, res) => {
-    console.log(req.cookies);  // DEBUG
+    // console.log(req.cookies);  // DEBUG
     var error = 0;  // AKA "error flag"
 
     if(Object.keys(req.cookies).length !== 0 && req.cookies["isAuth"] === "1") { // If there is cookies and IF is authenticated (very insecure)
