@@ -36,7 +36,7 @@ exports.Watchdog = class {
             this.object = object; // Update to be last values next time
         });
     }
-}
+};
 
 // Cleaner
 exports.Cleaner = class {
@@ -88,4 +88,4 @@ exports.Cleaner = class {
             }
         });
     }
-}
+};

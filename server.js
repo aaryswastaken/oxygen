@@ -13,7 +13,7 @@ var cred = JSON.parse(fs.readFileSync("./credentials.json"));
 
 // Export
 const MONGOxlsx = require("mongo-xlsx");
-const MONGOcsv = require("json2csv")
+const MONGOcsv = require("json2csv");
 
 // URL Parsing
 const url = require("url");
@@ -61,7 +61,7 @@ MongoClient.connect(dburl, function(err, db) {
     var oxymetre = db.db(cred.db.db.name);  // Get the database instance
     database = oxymetre;
 
-    oxymetre.collection(cred.db.db.ressources.users).find().toArray().then(t => {
+    oxymetre.collection(cred.db.db.ressources.users).find().toArray().then( (t) => {
         /* t.forEach(e => {
             //console.log(e.id + " " + e.name);
         }); */
@@ -70,18 +70,18 @@ MongoClient.connect(dburl, function(err, db) {
 
     // TODO : Imlement refresh on (index) when user is added / deleted / updated
     // Watchdog for when a user has been updated / created / deleted
-    var wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.users), settings["database.period"], {"id": 1}, settings["database.limit"], object => {
+    var wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.users), settings["database.period"], {"id": 1}, settings["database.limit"], (object) => {
         //console.log("Users : changed !");
     });
     wtch.start();
     watchdogs.push(wtch);
 
     // Watchdog for when a data (oxymeter values) is updates / created / deleted
-    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.data), settings["database.period"], {"date": -1}, settings["database.limit"], object => {
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.data), settings["database.period"], {"date": -1}, settings["database.limit"], (object) => {
         var temp = [];
         var ids = [];
         //console.log("Oxymetre : changed !");
-        object.forEach(e => {
+        object.forEach( (e) => {
             if(ids.includes(e.id)) {
                 if(temp[e.id].date < e.date) {
                     temp[e.id] = e;
@@ -106,8 +106,8 @@ MongoClient.connect(dburl, function(err, db) {
         settings["database.cleaner.data.period"],
         {},
         {"count": 15000},
-        (object) =>{
-            return object.length > 150000},
+        (object) => {
+            return object.length > 150000; },
         (err, obj) => {
             // console.log("[data] " + obj.result.n.toString() + " entry deleted"); // LOG
         }); // 1000 (s) * 1000 = (ms)
@@ -115,7 +115,7 @@ MongoClient.connect(dburl, function(err, db) {
     cleaners.push(cleaner);
 
     // Watchdog for when a new SP02 alert is created / deleted / updated
-    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.OXYalerts), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.OXYalerts), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, (object) => { // *1000 -> no false errors
         var temp = [];
         var ids = [];
         //console.log("OXYalerts : changed !");
@@ -138,7 +138,7 @@ MongoClient.connect(dburl, function(err, db) {
     // TODO : clean SP02 alerts when user is deleted
 
     // Watchdog for pulse data (BPM)
-    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.pulse), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.pulse), settings["database.period"], {"date": -1}, settings["database.limit"]*1000, (object) => { // *1000 -> no false errors
         var temp = [];
         var ids = [];
         //console.log("OXYalerts : changed !");
@@ -164,7 +164,7 @@ MongoClient.connect(dburl, function(err, db) {
         settings["database.cleaner.data.period"],
         {},
         {"count": 15000},
-        (object) =>{
+        (object) => {
             return object.length > 150000},
         (err, obj) => {
             // console.log("[data] " + obj.result.n.toString() + " entry deleted");  // LOG
@@ -196,7 +196,7 @@ MongoClient.connect(dburl, function(err, db) {
     // TODO : clean BPM alerts when user is deleted
 
     // Watchdog for alert profiles
-    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.alertsConfig), 10, {}, settings["database.limit"]*1000, object => { // *1000 -> no false errors
+    wtch = new watchdog.Watchdog(oxymetre.collection(cred.db.db.ressources.alertsConfig), 10, {}, settings["database.limit"]*1000, (object) => { // *1000 -> no false errors
         var temp = {"oxy": [], "pulse": []};
         //console.log("OXYalerts : changed !");
         object.forEach(e => {
@@ -205,7 +205,7 @@ MongoClient.connect(dburl, function(err, db) {
                     temp.oxy.push(e);
                     break;
                 case 2:
-                    temp.pulse.push(e)
+                    temp.pulse.push(e);
             }
         });  // Same sort as the others
 
@@ -216,7 +216,7 @@ MongoClient.connect(dburl, function(err, db) {
 });
 // **** END OF DATABASE CONNECTION PROMISE ****
 
-console.log("Finished");
+// console.log("Finished");
 
 // Process the data to be more efficient in the browser (-> Used by the main dashboard)
 function process(object, callback) {
@@ -232,7 +232,7 @@ function process(object, callback) {
             sort = {chambre: 1};
             break;
         case 2:
-            sort = {name: 1}
+            sort = {name: 1};
             break;
     }
 
@@ -242,26 +242,26 @@ function process(object, callback) {
                 var obj = e;
 
                 // TODO : Optimization of process()
-                object.state.forEach(state => {
+                object.state.forEach( (state) => {
                     if(state.id === obj.id) {
                         obj.concentration = state.concentration;
                         obj.date = state.date;
                     }
                 });  // Get SP02 data for this user
 
-                object.OXYalerts.forEach(alert => {
+                object.OXYalerts.forEach( (alert) => {
                     if(alert.id === obj.id) {
                         obj.OXYlevel = alert.level;
                     }
                 });  // Get SP02 alerts for this user
 
-                object.pulse.forEach(pulse => {
+                object.pulse.forEach( (pulse) => {
                     if(pulse.id === obj.id) {
                         obj.pulsation = pulse.pulsation;
                     }
                 });  // Get BPM data for this user
 
-                object.PULSEalerts.forEach(pulse => {
+                object.PULSEalerts.forEach( (pulse) => {
                     if(pulse.id === obj.id) {
                         obj.PULSElevel = pulse.level;
                     }
@@ -280,38 +280,38 @@ function dumpDBfromURL(url, callback) {
     var split = url.split("?");
     var id = 1;
     if(split.length === 2) {
-        id = parseInt(split[1]);
+        id = parseInt(split[1], 10);
     }
 
     // Dump the data for this user
     var toSend = {};
 
     // User info
-    database.collection(cred.db.db.ressources.users).find({"id": id}).toArray().then( a => {
+    database.collection(cred.db.db.ressources.users).find({id}).toArray().then( (a) => {
         toSend.users = a;
 
         // SP02 values
-        database.collection(cred.db.db.ressources.data).find({"id": id}).sort({"date": -1}).toArray().then( a => {
+        database.collection(cred.db.db.ressources.data).find({id}).sort({"date": -1}).toArray().then( (a) => {
             toSend.oxymeter = a;
 
             // BPM values
-            database.collection(cred.db.db.ressources.pulse).find({"id": id}).sort({"date": -1}).toArray().then( a => {
+            database.collection(cred.db.db.ressources.pulse).find({id}).sort({"date": -1}).toArray().then( (a) => {
                 toSend.pulse = a;
 
                 // SP02 alerts
-                database.collection(cred.db.db.ressources.OXYalerts).find({"id": id}).sort({"date": -1}).toArray().then(a => {
+                database.collection(cred.db.db.ressources.OXYalerts).find({id}).sort({"date": -1}).toArray().then( (a) => {
                     toSend.OXYalerts = a;
 
                     // BPM alerts
-                    database.collection(cred.db.db.ressources.PULSEalerts).find({"id": id}).sort({"date": -1}).toArray().then(a => {
+                    database.collection(cred.db.db.ressources.PULSEalerts).find({id}).sort({"date": -1}).toArray().then( (a) => {
                         toSend.PULSEalerts = a;
 
                         // Alert profiles
-                        database.collection(cred.db.db.ressources.alertsConfig).find().toArray().then(a => {
+                        database.collection(cred.db.db.ressources.alertsConfig).find().toArray().then( (a) => {
                             toSend.alertsConfig = a;
 
                             // Notes
-                            database.collection(cred.db.db.ressources.notes).find({"id": id}).sort({"date": -1}).toArray().then(a => {
+                            database.collection(cred.db.db.ressources.notes).find({id}).sort({"date": -1}).toArray().then(  (a) => {
                                 toSend.notes = a;
 
                                 // console.log(JSON.stringify(toSend));
@@ -339,13 +339,13 @@ function dumpDBfromURL(url, callback) {
 // GET \ BROWSER \ MAIN PAGE, MAIN DASHBOARD
 app.get("/", (req, res) => {
     settings = JSON.parse(fs.readFileSync("./settings.json"));
-    res.render("index.ejs", {"settings": settings});
+    res.render("index.ejs", {settings});
 });
 
 // POST \ REST (READ) \ DASHBOARD DATA (global)
 app.post("/", (req, res) => {
     // res.end(JSON.stringify({"data": process(data), "alertProfiles": data.alertProfiles}));
-    process(data, result => {
+    process(data, (result) => {
         res.end(JSON.stringify({"data": result, "alertProfiles": data.alertProfiles}));
     });
 });
@@ -354,7 +354,7 @@ app.post("/", (req, res) => {
 app.get("/patient", (req, res) => {
     dumpDBfromURL(req.url, (toSend) => {
         // console.log(req.url);
-        res.render("patient.ejs", { "data": toSend, "url": req.url, "refresh_rate": settings["patient.refresh_rate"], "settings": settings});
+        res.render("patient.ejs", { "data": toSend, "url": req.url, "refresh_rate": settings["patient.refresh_rate"], settings});
     });
 });
 
@@ -362,7 +362,7 @@ app.get("/patient", (req, res) => {
 app.post("/patient", (req, res) => {
     dumpDBfromURL(req.url, (toSend) => {
         res.end(JSON.stringify(toSend));
-    })
+    });
 });
 
 // POST \ REST (write) \ ADD NOTE TO PATIENT
@@ -390,7 +390,7 @@ app.get("/settings", (req, res) => {
 // TODO : IMPLEMENT decodeURI()
 app.post("/settings", (req, res) => {
     settings = JSON.parse(fs.readFileSync("./settings.json"));
-    console.log(req.url)
+    // console.log(req.url)
     url.parse(req.url).query.split("&").forEach( (e) => {
         var split = e.split("=");
         if(split.length === 2) {
@@ -410,7 +410,7 @@ app.post("/settings", (req, res) => {
                     ok = true;
                     break;
                 case "string":
-                    data = split[1]
+                    data = split[1];
                     ok = true;
                     break;
             }
@@ -453,12 +453,12 @@ app.post("/login", (req, res) => {
         // console.log("hashed : "+hashed);
         isAuth = pwd.verify(req.body.password, hashed);
     } catch (e) {
-        console.log("An error occured : "+e);
-        res.render("login.ejs", {"failed": true, "from": req.body.from})
+        console.error("An error occured : "+e);
+        res.render("login.ejs", {"failed": true, "from": req.body.from});
     }
-    console.log("Is auth ?"+isAuth);
+    // console.log("Is auth ?"+isAuth);
     res.cookie("isAuth", "1");
-    res.render("relocator.ejs", {"from": req.body.from})
+    res.render("relocator.ejs", {"from": req.body.from});
 })
 
 // GET \ REST (auth) \ LOGOUT
@@ -480,27 +480,27 @@ app.post("/user", (req, res) => {
             } else {
                 var _value;
 
-                _value = parseInt(decodeURI(split[1]))
+                _value = parseInt(decodeURI(split[1]), 10);
 
                 if(isNaN(_value)) {
-                    _value = decodeURI(split[1])
+                    _value = decodeURI(split[1]);
                 }
 
-                change[decodeURI(split[0])] = _value
+                change[decodeURI(split[0])] = _value;
             }
         }
     });
 
-    console.log("***********************************************************")
-    console.log(id);
-    console.log(change);
+    console.warn("***********************************************************");
+    console.warn(id);
+    console.warn(change);
 
     if(id !== -1) {
         /*database.collection(cred.db.db.ressources.users).updateOne({'id': id}, {name: "test"}, function(err, res) {
             if (err) throw err;
             console.log("1 document updated");
         });*/
-        database.collection(cred.db.db.ressources.users).findOneAndUpdate({"id": id}, {"$set": change}, (err, res) => {
+        database.collection(cred.db.db.ressources.users).findOneAndUpdate({id}, {"$set": change}, (err, res) => {
             console.log("hello")
         });
     }
@@ -516,7 +516,7 @@ app.post("/createConfig", (req, res) => {
     var _update = JSON.parse(split[1]), update = {};
 
     for(let [key, value] of Object.entries(_filter)) {
-        let val = parseInt(value);
+        let val = parseInt(value, 10);
 
         if(isNaN(val))  val = value;
 
@@ -620,13 +620,13 @@ app.get("/dump", (req, res) => {
     let promise;
     switch (json.dump) {
         case "userInfo":
-            promise = database.collection(cred.db.db.ressources.users).find({"id": parseInt(json.id)}).toArray();
+            promise = database.collection(cred.db.db.ressources.users).find({"id": parseInt(json.id, 10)}).toArray();
             break;
         case "oxy":
-            promise = database.collection(cred.db.db.ressources.data).find({"id": parseInt(json.id)}).toArray();
+            promise = database.collection(cred.db.db.ressources.data).find({"id": parseInt(json.id, 10)}).toArray();
             break;
         case "pulse":
-            promise = database.collection(cred.db.db.ressources.pulse).find({"id": parseInt(json.id)}).toArray();
+            promise = database.collection(cred.db.db.ressources.pulse).find({"id": parseInt(json.id, 10)}).toArray();
             break;
     }
 
