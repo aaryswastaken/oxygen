@@ -1,15 +1,16 @@
 # oxygen
 Simple monitoring dashboard for oximeters
 
-# /!\ STILL IN DEVELOPPEMENT /!\
+## /!\ STILL IN DEVELOPPEMENT /!\
 
-## TODO
+### TODO
 
 For export : [Mongo XLSX](https://github.com/Moblox/mongo-xlsx)
 
-##### Main Page : OK
+Main Page : **OK**
 
-##### USER : OK ( Priority 1, 2, 3 )
+USER : **OK** ( Priority 1, 2, 3 )
 
-##### Settings : PAGE FINISHED 
+Settings : **PAGE FINISHED**
+
 TODO : INPLEMENTATION

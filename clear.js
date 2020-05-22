@@ -11,6 +11,7 @@ var database;
 
 MongoClient.connect(url, function(err, db) {
     if (err) {
+        /* eslint no-console: ["error", { allow: ["log", "warn", "error"] }] */
         console.log("Error : "+err);
     }
 
@@ -19,25 +20,33 @@ MongoClient.connect(url, function(err, db) {
     var oxymetre = db.db("oxymetre");
 
     oxymetre.collection("oxymetre").deleteMany({}, function (err, obj) {
-        if (err) throw err;
+        if (err) {
+            throw err;
+        }
         console.log(obj.result.n + " document(s) deleted");
         db.close();
     });
 
     oxymetre.collection("oxymetre-alerts").deleteMany({}, function (err, obj) {
-        if (err) throw err;
+        if (err) {
+            throw err;
+        }
         console.log(obj.result.n + " document(s) deleted");
         db.close();
     });
 
     oxymetre.collection("pulse").deleteMany({}, function (err, obj) {
-        if (err) throw err;
+        if (err) {
+            throw err;
+        }
         console.log(obj.result.n + " document(s) deleted");
         db.close();
     });
 
     oxymetre.collection("pulse-alerts").deleteMany({}, function (err, obj) {
-        if (err) throw err;
+        if (err) {
+            throw err;
+        }
         console.log(obj.result.n + " document(s) deleted");
         db.close();
     });
