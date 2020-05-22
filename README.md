@@ -12,5 +12,3 @@ Main Page : **OK**
 USER : **OK** ( Priority 1, 2, 3 )
 
 Settings : **PAGE FINISHED**
-
-TODO : INPLEMENTATION
