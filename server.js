@@ -27,7 +27,7 @@ app.use(cookieParser());
 
 // To get <form> response
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({extended: true}));
 
 // Mongodb
 const mongodb = require("mongodb");
@@ -94,11 +94,11 @@ MongoClient.connect(dburl, function(err, db) {
     wtch.start();
     watchdogs.push(wtch);
 
-    console.log(settings["database.cleaner.data.period"]);  // Give the cleaning period (please refer to watchdog.js for more info)
+    // console.log(settings["database.cleaner.data.period"]);  // Give the cleaning period (please refer to watchdog.js for more info)
 
 
     // Init a new cleaner for oxymeter values, cut the 15,000 oldest values when there is more than 150,000 values
-    var cleaner = new watchdog.cleaner(
+    var cleaner = new watchdog.Cleaner(
         oxymetre.collection(cred.db.db.ressources.data),
         settings["database.cleaner.data.period"],
         {},
@@ -156,7 +156,7 @@ MongoClient.connect(dburl, function(err, db) {
     watchdogs.push(wtch);
 
     // Cleaner for BPM data
-    cleaner = new watchdog.cleaner(
+    cleaner = new watchdog.Cleaner(
         oxymetre.collection(cred.db.db.ressources.pulse),
         settings["database.cleaner.data.period"],
         {},
@@ -233,8 +233,8 @@ function process(object, callback) {
             break;
     }
 
-    database.collection(cred.db.db.ressources.users).find().sort(sort).toArray().then( a => {  // Get a list of users, sorted by the user-defined sort
-        a.forEach( e => {  // a -> Array of all users | e -> current user
+    database.collection(cred.db.db.ressources.users).find().sort(sort).toArray().then( (a) => {  // Get a list of users, sorted by the user-defined sort
+        a.forEach( (e) => {  // a -> Array of all users | e -> current user
             if(!(e === null)) {  // If no error
                 var obj = e;
 
@@ -344,13 +344,13 @@ app.post("/", (req, res) => {
     // res.end(JSON.stringify({"data": process(data), "alertProfiles": data.alertProfiles}));
     process(data, result => {
         res.end(JSON.stringify({"data": result, "alertProfiles": data.alertProfiles}));
-    })
-})
+    });
+});
 
 // GET \ BROWSER \ PATIENT DASHBOARD
 app.get("/patient", (req, res) => {
     dumpDBfromURL(req.url, (toSend) => {
-        console.log(req.url);
+        // console.log(req.url);
         res.render("patient.ejs", { "data": toSend, "url": req.url, "refresh_rate": settings["patient.refresh_rate"], "settings": settings});
     })
 });
@@ -372,7 +372,7 @@ app.post("/addnote", (req, res) => {
 
         split[1] = decodeURI(split[1]);
         var json = JSON.parse(split[1]);
-        console.log(json);
+        // console.log(json);
         database.collection(cred.db.db.ressources.notes).insertOne(json);
     }
 });
@@ -388,7 +388,7 @@ app.get("/settings", (req, res) => {
 app.post("/settings", (req, res) => {
     settings = JSON.parse(fs.readFileSync("./settings.json"));
     console.log(req.url)
-    url.parse(req.url).query.split("&").forEach(e => {
+    url.parse(req.url).query.split("&").forEach( (e) => {
         var split = e.split("=");
         if(split.length === 2) {
             var data;
@@ -399,7 +399,7 @@ app.post("/settings", (req, res) => {
                     ok = true;
                     break;
                 case "boolean":
-                    data = split[1] == "1" || split[1] == "true"
+                    data = (split[1] === "1" || split[1] === "true");
                     ok = true;
                     break;
                 case "object":

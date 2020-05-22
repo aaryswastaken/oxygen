@@ -26,7 +26,7 @@ exports.Watchdog = class {
             setTimeout(this.check, this.period); // Call itself in [PERIOD]
         }
 
-        this.collection.find().sort(this.sort).limit(this.limit).toArray().then(object => { // Get a dump of the listened collections
+        this.collection.find().sort(this.sort).limit(this.limit).toArray().then( (object) => { // Get a dump of the listened collections
             if(JSON.stringify(object) !== JSON.stringify(this.object)) { // Is there any difference from the last values ?
                 this.callback(object); // If yes : execute the callback w/ the recent dump
                 //console.log("Before : "+JSON.stringify(this.object));
@@ -39,7 +39,7 @@ exports.Watchdog = class {
 }
 
 // Cleaner
-exports.cleaner = class {
+exports.Cleaner = class {
     constructor(collection, period, selfilter, delfilter, condition, callback) {
         this.collection = collection; // Collection to listen on
         this.period = period; // Period at which he listen
@@ -72,7 +72,7 @@ exports.cleaner = class {
 
         var first;
 
-        this.collection.find(this.selfilter).sort({"date": 1}).toArray().then(object => { // Dump all the collection with matching filter
+        this.collection.find(this.selfilter).sort({"date": 1}).toArray().then( (object) => { // Dump all the collection with matching filter
             if(this.condition(object)) {  // Execute boolean function and wait the return
                 if (object.length !== 0) { // If exist
                     first = object[0].date; // First #ID
@@ -80,7 +80,7 @@ exports.cleaner = class {
                     // console.log("this.delfilter.count : "+this.delfilter.count.toString());
                     // console.log("firstId + this.delfilter.count : "+ (first + this.delfilter.count).toString());
 
-                    this.collection.find({"date": {"$lt": first + this.delfilter.count}}).toArray().then(object => { // Find in collection with matching filter
+                    this.collection.find({"date": {"$lt": first + this.delfilter.count}}).toArray().then( (object) => { // Find in collection with matching filter
                         // console.log("object.length : "+object.length.toString());
                         this.collection.deleteMany({"date": {"$lt": first + this.delfilter.count}}, this.callback); // Delete
                     });
