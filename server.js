@@ -1,3 +1,5 @@
+// TODO : ADD LOGS
+
 // *********** IMPORTS *********
 // Express
 const express = require("express");
@@ -352,7 +354,7 @@ app.get("/patient", (req, res) => {
     dumpDBfromURL(req.url, (toSend) => {
         // console.log(req.url);
         res.render("patient.ejs", { "data": toSend, "url": req.url, "refresh_rate": settings["patient.refresh_rate"], "settings": settings});
-    })
+    });
 });
 
 // POST \ REST (read) \ PATIENT DATA (specific)
@@ -403,7 +405,7 @@ app.post("/settings", (req, res) => {
                     ok = true;
                     break;
                 case "object":
-                    data = JSON.parse(split[1])
+                    data = JSON.parse(split[1]);
                     ok = true;
                     break;
                 case "string":
@@ -411,7 +413,9 @@ app.post("/settings", (req, res) => {
                     ok = true;
                     break;
             }
-            if(ok) settings[split[0]] = data;
+            if(ok) {
+                settings[split[0]] = data;
+            }
         }
     });
     fs.writeFileSync("./settings.json", JSON.stringify(settings));
@@ -426,14 +430,10 @@ app.get("/config", (req, res) => {
     console.log(req.cookies);  // DEBUG
     var error = 0;  // AKA "error flag"
 
-    if(Object.keys(req.cookies).length === 0) { // If there is no cookies
-        error += 1;
+    if(Object.keys(req.cookies).length !== 0 && req.cookies["isAuth"] === "1") { // If there is cookies and IF is authenticated (very insecure)
+        res.render("config.ejs", {"settings": settings});  // RENDER SETTINGS PAGE
     } else {
-        if(req.cookies["isAuth"] === "1") { // IF is authenticated (very insecure)
-            res.render("config.ejs", {"settings": settings});  // RENDER SETTINGS PAGE
-        } else {
-            error += 1;
-        }
+        error += 1;
     }
 
     if(error !== 0) {  // IF THERE WAS AN ERROR
@@ -444,11 +444,11 @@ app.get("/config", (req, res) => {
 
 // POST \ REST (read / auth) \ AUTHENTICATE
 app.post("/login", (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     let isAuth = false;
     try {
         let hashed =  auth[req.body.username].hash;
-        console.log("hashed : "+hashed)
+        // console.log("hashed : "+hashed);
         isAuth = pwd.verify(req.body.password, hashed);
     } catch (e) {
         console.log("An error occured : "+e);
@@ -467,10 +467,10 @@ app.get("/logout", (req, res) => {
 
 // POST \ REST (write) \ UPDATE USER INFO(s)
 app.post("/user", (req, res) => {
-    console.log(req.url);
+    // console.log(req.url);
     var id = -1;
     var change = {};
-    url.parse(req.url).query.split("&").forEach(e => {
+    url.parse(req.url).query.split("&").forEach( (e) => {
         var split = e.split("=");
         if (split.length === 2) {
             if(split[0] === "id") {
@@ -613,7 +613,7 @@ app.get("/dump", (req, res) => {
         let splitEqual = e.split("=");
         json[splitEqual[0]] = splitEqual[1]
     })
-    console.log(json);
+    // console.log(json);
 
     let promise;
     switch (json.dump) {
