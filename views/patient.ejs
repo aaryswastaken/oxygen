@@ -288,37 +288,38 @@
 
     /////////////////////////////////////////
 
-    document.getElementById("addNote").onclick = () => {
+    document.getElementById("addNote").onclick = () => { // POPUP TOGGLE
         document.getElementById("addNotePopup").hidden = false;
     }
 
-    document.getElementById("closePopup").onclick = () => {
+    document.getElementById("closePopup").onclick = () => { // POPUP TOGGLE
         document.getElementById("addNotePopup").hidden = true;
     }
 
-    document.getElementById("addNoteConfirm").onclick = () => {
-        var from = document.getElementById("fromInput").value;
-        var note = document.getElementById("noteInput").value;
+    document.getElementById("addNoteConfirm").onclick = () => { // CREATE NEW NOTE
+        var from = document.getElementById("fromInput").value; // Get sender name
+        var note = document.getElementById("noteInput").value; // Get note
 
-        if(from.length === 0 || note.length === 0) {
-            alert("Vous n'avez pas remplis tout les champs");
+        if(from.length === 0 || note.length === 0) { // Simple test
+            alert("Vous n'avez pas remplis tout les champs"); // Send an alert
         } else {
-            var toSend = {"id": <%= data.users[0].id %>, "from": from, "note": note, "date": Date.now()}
-            console.log(toSend);
+            var toSend = {"id": <%= data.users[0].id %>, "from": from, "note": note, "date": Date.now()} // Fill the data to send
+            console.log(toSend); // Debug
 
-            var req = new XMLHttpRequest();
-            req.onreadystatechange = function () {
-                document.getElementById("addNotePopup").hidden = true;
-                location.reload();
+            var req = new XMLHttpRequest(); // Create a request
+            req.onreadystatechange = function () { // Onresponse
+                document.getElementById("addNotePopup").hidden = true; // Hide popup
+                location.reload(); // Refresh
             }
-            req.open("POST", "/addnote?"+JSON.stringify(toSend), true);
-            req.send();
+            req.open("POST", "/addnote?"+JSON.stringify(toSend), true); // prepare request
+            req.send(); // send
         }
     }
 
     //////////////////////////////////////////// ALERTS //////////////////////////////////////////////////////
 
-    function refresh_OXYalerts (OXYalerts, PULSEalerts) {
+    // TODO : Give more generic name
+    function refresh_OXYalerts (OXYalerts, PULSEalerts) { // Display recent alerts
          ////////////// OXYMETER /////////////
         var _max = 10;
 
@@ -477,7 +478,7 @@
 
     //////////////////////////////////////////// NOTES //////////////////////////////////////////////////////
 
-    function refresh_notes (messages) {
+    function refresh_notes (messages) { // Display notes
         var messageDOM = document.getElementById("message-body")
         messageDOM.innerHTML = "<tr>\n" +
             "                        <th>Date</th>\n" +
@@ -523,6 +524,7 @@
 
     var ctx = document.getElementById('chart').getContext('2d');
 
+    // Create graph
     var chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -581,9 +583,10 @@
         }
     });
 
+    // On time period change
     document.getElementById("size").oninput = function () {
         // console.log(this.value)
-        setGraphTime(this.value)
+        setGraphTime(this.value);
     }
 
     var rawdata = {};
@@ -591,7 +594,7 @@
     rawdata.pulse = <%- JSON.stringify(data.pulse) %>;
     var lastgraphID = 0;
 
-    function setGraphTime (_var) {
+    function setGraphTime (_var) { // Update graph with data, corresponding to how old they are
         var val = parseInt(_var);
         lastgraphID = val;
         // console.log("Asked : "+val)
@@ -625,9 +628,9 @@
         chart.update();
     }
 
-    setGraphTime(0);
+    setGraphTime(0); // Init
 
-    function refresh_graph(oxymeter, pulse) {
+    function refresh_graph(oxymeter, pulse) { // Refresh graph data while keeping time index
         if(lastgraphID === 0) {
             setGraphTime(lastgraphID);
             rawdata.oxymeter = oxymeter;
@@ -635,7 +638,7 @@
         }
     }
 
-    //////////////////////////////////////////// INFO USER ////////////////////////////////////////////////////
+    //////////////////////////////////////////// USER INFO  ////////////////////////////////////////////////////
 
     function _calculateAge(birthday) { // birthday is a date
         var ageDifMs = Date.now() - birthday.getTime();
@@ -648,6 +651,7 @@
         var user = json.users[0];
         var birth = new Date(user.birth);
 
+        // Create the patient description according to his data
         infoPatient.innerHTML = "" +
             "<div> Nom : "+user.name+"</div>" +
             "<div> Identifiant : #"+user.id+"</div>" +
@@ -656,60 +660,62 @@
             "<div> Contact Famille : "+user.famille+"</div>";
 
 
-        console.log(json);
+        console.log(json); // Debug
     }
 
     //////////////////////////////////////////// EDIT USER ////////////////////////////////////////////////////
 
     document.getElementById("settings").onclick = () => {
-        console.log("settings");
-        document.getElementById("modifyUser").hidden = false;
+        console.log("settings"); // Debug
+        document.getElementById("modifyUser").hidden = false; // Toggle popup
     }
 
     document.getElementById("muclosePopup").onclick = () => {
-        initSettings();
-        document.getElementById("modifyUser").hidden = true;
+        initSettings(); // Reset settings <input>
+        document.getElementById("modifyUser").hidden = true; // Toggle popup
     };
 
     var alertsDisable = [];
 
     document.getElementById("modifyConfirm").onclick = () => {
-        if(alertsDisable.length === 0) {
+        if(alertsDisable.length === 0) { // If correct
             var changes = "";
 
-            var values = Array.from(document.getElementsByClassName("settingsValue"))
+            var values = Array.from(document.getElementsByClassName("settingsValue")); // Array of every <input>
 
             var itid = 1;
 
             values.forEach(e => {
                 var buff;
                 if(e.name !== "birth") {
-                    buff = `${e.name}=${e.value}`;
-                } else {
+                    buff = `${e.name}=${e.value}`; // create a new http req arg
+                } else { // If date
                     var dt = new Date(e.value)
-                    buff = "birth="+dt.getTime();
+                    buff = "birth="+dt.getTime(); // Create a http req arg
                 }
-                if (itid < values.length) {
-                    buff += "&"
+                if (itid < values.length) { // If not the last
+                    buff += "&" // add delimiter
                 }
                 itid += 1;
-                changes += buff
+                changes += buff; // append
             })
 
+            // Open request
             var req = new XMLHttpRequest();
             req.onreadystatechange = function () {
-                location.reload();
+                // Onresponse
+                location.reload(); // Refresh
             }
-            req.open("POST", "/user?id=" + json.users[0].id + "&" + changes, true);
-            req.send();
+            req.open("POST", "/user?id=" + json.users[0].id + "&" + changes, true); // configure
+            req.send(); // Send
         } else {
-            alert("Veuillez vérifier vos données")
+            alert("Veuillez vérifier vos données"); // Isn't correct
         }
     }
 
-    var alertConfig = {"oxy": {}, "pulse": {}};
+    var alertConfig = {"oxy": {}, "pulse": {}}; // Blank
 
-    function initSettings() {
+    function initSettings() { // Reset user-specific settings <input> to default
         document.getElementById("muNomInput").value = json.users[0].name;
         document.getElementById("muChambreInput").value = json.users[0].chambre;
         var birth = new Date(json.users[0].birth);
@@ -787,36 +793,38 @@
 
     //////////////////////////////////////////// REFRESH ////////////////////////////////////////////////////
 
-    var json = {};
+    var json = {}; // Object
     var fTime = 0;
 
     function refresh_all() {
-        setTimeout(refresh_all, <%= refresh_rate %>);
+        setTimeout(refresh_all, <%= refresh_rate %>); // Call itself
 
-        var req = new XMLHttpRequest();
+        var req = new XMLHttpRequest(); // Open request
         req.onreadystatechange = function () {
+            // On responsed
             if (this.readyState === 4 && this.status === 200) {
                 json = JSON.parse(this.responseText)
                 // console.log(json.OXYalerts);
-                refresh_OXYalerts(json.OXYalerts, json.PULSEalerts);
-                refresh_notes(json.notes);
-                refresh_graph(json.oxymeter, json.pulse);
+                refresh_OXYalerts(json.OXYalerts, json.PULSEalerts); // Refresh alerts
+                refresh_notes(json.notes); // Refresh notes
+                refresh_graph(json.oxymeter, json.pulse); // Refresh graph
                 //console.log(json);
                 // console.info("refreshed");
-                if(fTime < 2) {
-                    initSettings();
+
+                if(fTime < 2) { // If first or second response
+                    initSettings(); // Init Settings
                 }
 
-                if(fTime < 1) {
-                    init();
+                if(fTime < 1) { // If first response
+                    init(); // init user info
                 }
 
                 fTime += 1;
             }
         }
-        req.open("POST", "/patient?"+<%= data.users[0].id%>, true);
-        req.send();
+        req.open("POST", "/patient?"+<%= data.users[0].id%>, true); // Configure
+        req.send(); // send
     }
 
-    refresh_all();
+    refresh_all(); // Init the loop
 </script>
