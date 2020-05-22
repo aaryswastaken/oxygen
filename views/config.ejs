@@ -245,17 +245,20 @@
     var json = {};
 
     function refresh() {
+        // Create request in order to get the actual app settings
         var req = new XMLHttpRequest();
         req.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
+                // On response
                 json = JSON.parse(this.responseText);
-                init();
+                init(); // Initialize
             }
         }
         req.open("POST", "/", true);
-        req.send();
+        req.send(); // send
     }
 
+    // Init all <input> with their respectives values
     function init() {
         /////////////////////////////////////// CHECKBOXES ///////////////////////////////////////
         document.getElementById("showGraph").checked = actualSettings.showGraph;

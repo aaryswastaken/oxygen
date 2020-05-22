@@ -1,3 +1,5 @@
+// THIS SCRIPT IS USED TO SEND RANDOM DATA TO THE DATABASE TO SIMULATE THE BEHAVIOUR
+
 const mongodb = require("mongodb");
 var MongoClient = mongodb.MongoClient;
 

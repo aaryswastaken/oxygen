@@ -145,36 +145,39 @@
     console.log(DOMshowSettings)
 
     DOMshowSettings.onclick = () => {
-        console.log("Hello");
-        DOMpopup.hidden = !DOMpopup.hidden;
+        DOMpopup.hidden = !DOMpopup.hidden; // TOGGLE THE POPUP
     }
 
-    DOMsendSettings.onclick = () => {
-        var toSend = "";
-        var settingsInput = document.getElementsByClassName("settingsInput");
+    DOMsendSettings.onclick = () => { // SEND THE SETTINGS
+        var toSend = ""; // URL & DATA
+
+        var settingsInput = document.getElementsByClassName("settingsInput"); // All SETTINGS <input>
 
         var id = 0;
         Array.from(settingsInput).forEach( e => {
             toSend += (e.name+"="+e.value);
             if(Array.from(settingsInput).length > id+1) {
-                toSend += ("&")
+                toSend += ("&");
             }
             id += 1;
         });
 
+        // SEND THE NEW SETTINGS
         var req = new XMLHttpRequest();
-        req.onreadystatechange = function () {
+        req.onreadystatechange = function () { // ON RESPONSE
             if (this.readyState === 4 && this.status === 200) {
-                location.reload();
+                location.reload(); // REFRESH
             }
         }
-        req.open("POST", "/settings?"+toSend, true);
-        req.send();
+        req.open("POST", "/settings?"+toSend, true); // open requests
+        req.send(); // send
 
-        console.log(toSend);
+        //console.log(toSend); // DEBUG
     }
 
     /////////// INIT ///////////////////////
+    // Init popup input values according to actual settings
+
     function init() {
         console.log(json);
         switch(settings["sort"]) {
@@ -191,17 +194,17 @@
     }
 
     /////////// PRINT //////////////////////
-    function print() {
-        var nLine = Math.floor(json.data.length / settings["display.colQty"]);
+    function print() { // CREATE and UPDATE the table
+        var nLine = Math.floor(json.data.length / settings["display.colQty"]); // How many lines have to be printed
 
         if(nLine * settings["display.colQty"] < json.data.length) {
             nLine += 1;
-        }
+        } // Last line (if R>0)
 
-        for(var n = 0;n<nLine;n+=1) {
-            if(settings["display.colQty"] < 1) settings["display.colQty"] = 1;
+        for(var n = 0;n<nLine;n+=1) { // For each line we have to print
+            if(settings["display.colQty"] < 1) settings["display.colQty"] = 1; // No Error
 
-            if(settings["display.colQty"] <= /*3*/ 10) { // DEFINE
+            if(settings["display.colQty"] <= /*3*/ 10) { // If less than 10 col
                 var tr = document.createElement("tr");
                 var _data = json.data.slice(n*settings["display.colQty"], n*settings["display.colQty"]+settings["display.colQty"])
 
@@ -209,6 +212,7 @@
                 // console.log(n*settings["display.colQty"]);
 
                 _data.forEach(e => {
+                    // Create the cell HTML
                     var th = document.createElement("th");
 
                     th.innerHTML = "" +
@@ -249,7 +253,7 @@
                         }
                     }
 
-                    tr.appendChild(th);
+                    tr.appendChild(th); // append it
                 });
 
                 var last = _data.length - settings["display.colQty"];
@@ -333,26 +337,29 @@
     var fTime = 0;
     var json;
 
+    // !!! FOR DEBUG PURPROSE ONLY !!!
     var useOnly = 20;
 
+    // Refresh routine
     function refresh() {
-        setTimeout(refresh, settings['patient.refresh_rate']);
+        setTimeout(refresh, settings['patient.refresh_rate']); // Call itself
+
+        // Create a request
         var req = new XMLHttpRequest();
         req.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
-                json = JSON.parse(this.responseText);
+                // On response
 
-                if(useOnly !== -1) {
-                    json.data.splice(useOnly, json.data.length - useOnly)
+                json = JSON.parse(this.responseText); // Update the data object
+
+                if(useOnly !== -1) { // FOR DEBUG PURPROSE ONLY !!!
+                    json.data.splice(useOnly, json.data.length - useOnly);
                 }
 
+                // When the second data is here (1st is corrupted bc of the database connection process promise)
                 if(1 < fTime && fTime < 3) {
                     init();
                     print();
-                }
-
-                if(1 < fTime) {
-                    // print();
                 }
 
                 fTime += 1;
