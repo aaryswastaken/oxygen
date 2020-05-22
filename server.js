@@ -432,7 +432,8 @@ app.get("/config", (req, res) => {
     var error = 0;  // AKA "error flag"
 
     if(Object.keys(req.cookies).length !== 0 && req.cookies["isAuth"] === "1") { // If there is cookies and IF is authenticated (very insecure)
-        res.render("config.ejs", {"settings": settings});  // RENDER SETTINGS PAGE
+        // res.render("config.ejs", {"settings": settings});  // RENDER SETTINGS PAGE
+        res.render("config.ejs", {settings});  // RENDER SETTINGS PAGE
     } else {
         error += 1;
     }
