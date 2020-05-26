@@ -284,7 +284,7 @@
     colors.background1 = "rgba(142,142,142,0.42)"
     colors.background2 = "rgba(224,224,224,0.57)"
 
-    <%var nbase = 100;%>
+    var nbase = 150; // Maximum of printed informations
 
     /////////////////////////////////////////
 
@@ -609,10 +609,14 @@
         data.pulse = JSON.parse(JSON.stringify(rawdata.pulse));
 
         // console.log(data.length.toString());
-        data.oxymeter.splice(<%= nbase%>+val, data.length-val);
+        // Slicing data
+        data.oxymeter.splice(nbase+val, data.oxymeter.length-val); // nmax correspond to "maximum [nmax] values are printed"
         data.oxymeter.splice(0, val);
-        data.pulse.splice(<%= nbase%>+val, data.length-val);
+        data.pulse.splice(nbase+val, data.pulse.length-val);
         data.pulse.splice(0, val);
+
+
+        console.log("Length : "+data.pulse.length);
         //console.log("After : " + rawdata.length.toString());
         data.oxymeter.forEach( e => {
             cctr.push(e.concentration);
