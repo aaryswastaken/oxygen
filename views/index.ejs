@@ -193,6 +193,59 @@
         }
     }
 
+    function HTMLfromElement(e) {
+        return "" +
+        "<div class=\"cont\" onclick=\"window.location.href = '/patient?" + e.id.toString() + "'\">" +
+        "   <div class=\"nom\">"+e.name + "</div>" +
+        //"   <div class=\"chambre\">" + e.chambre + "</div>" +
+        //"   <div class=\"id\">" + e.id + "</div>" +
+        "   <div class=\"chambre\">" + e.chambre + " - #" + e.id + "</div>" +
+        "   <div class=\"alert\">" + e["oxy-alert"] + "-" + e["pulse-alert"] + "</div>" +
+        "   <div class=\"oxy\">" + e.concentration + "</div>" +
+        "   <div class=\"pulse\"> - " + e.pulsation + "</div>" +
+        "</div>";
+    }
+
+    function update() {
+        var errorFlag = 0;
+
+        json.data.forEach( (e) => {
+            dom = document.getElementById("patienID"+e.id.toString());
+            if(dom === null) { // If doesn't exist
+                errorFlag += 1; // Add an error
+            } else {
+                dom.innerHTML = HTMLfromElement(e); // Or update
+
+                dom.style.backgroundColor = colors.normal;
+                dom.id = "patiendID"+e.id.toString();
+
+                if(e["OXYlevel"] !== "undefined") {
+                    switch(e.OXYlevel) {
+                        case 0:
+                            dom.style.backgroundColor = colors.normal;
+                            break;
+                        case 1:
+                            dom.style.backgroundColor = colors.warning;
+                            break;
+                        case 2:
+                            dom.style.backgroundColor = colors.problem;
+                            break;
+                        case 3:
+                            dom.style.backgroundColor = colors.critical;
+                            break;
+                        case 4:
+                            dom.style.backgroundColor = colors.unknown;
+                    }
+                }
+            }
+        });
+
+        if(errorFlag > 0) { // If there where an error
+            DOMmainTable.innerHTML = ""; // Full reset
+            print();
+        }
+    }
+
     /////////// PRINT //////////////////////
     function print() { // CREATE and UPDATE the table
         var nLine = Math.floor(json.data.length / settings["display.colQty"]); // How many lines have to be printed
@@ -215,24 +268,10 @@
                     // Create the cell HTML
                     var th = document.createElement("th");
 
-                    th.innerHTML = "" +
-                        "<div class=\"cont\" onclick=\"window.location.href = '/patient?" + e.id.toString() + "'\">" +
-                        "   <div class=\"nom\">"+e.name + "</div>" +
-                        //"   <div class=\"chambre\">" + e.chambre + "</div>" +
-                        //"   <div class=\"id\">" + e.id + "</div>" +
+                    th.innerHTML = HTMLfromElement(e);
 
-                        "   <div class=\"chambre\">" + e.chambre + " - #" + e.id + "</div>" +
-                        "   <div class=\"alert\">" + e["oxy-alert"] + "-" + e["pulse-alert"] + "</div>" +
-                        "   <div class=\"oxy\">" + e.concentration + "</div>" +
-                        "   <div class=\"pulse\"> - " + e.pulsation + "</div>" +
-                        //////////////// GRAPH IMPOSSIBLE //////////////
-                        // "   <div class=\"chartContainer\"><canvas id=\"chart" + e.id + "\" class=\"canvas\"/></div>"
-                        ////////////////////////////////////////////////
-                        // "   <div class=\"oxyAlert\">" + e["oxy-alert"] + "</div>" +
-                        // "   <div class=\"pulseAlert\">" + e["pulse-alert"] + "</div>" +
-                        "</div>"
-
-                    th.style.backgroundColor = colors.normal
+                    th.style.backgroundColor = colors.normal;
+                    th.id = "patiendID"+e.id.toString();
 
                     if(e["OXYlevel"] !== "undefined") {
                         switch(e.OXYlevel) {
@@ -360,6 +399,11 @@
                 if(1 < fTime && fTime < 3) {
                     init();
                     print();
+                }
+
+                // If not reseting ( print() )
+                if(fTime > 3) {
+                    update();
                 }
 
                 fTime += 1;
